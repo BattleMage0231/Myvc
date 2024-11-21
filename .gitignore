@@ -1,0 +1,4 @@
+*.o
+myvc
+failed/
+gcm.cache/
