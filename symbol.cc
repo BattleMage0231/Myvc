@@ -1,9 +1,8 @@
 export module symbol;
 
-import <memory>;
-import <string>;
+export import <string>;
 
-import commit;
+export import commit;
 
 namespace myvc {
 
@@ -14,6 +13,8 @@ export class Symbol {
 
 public:
     Symbol(const string &name) : name {name} {}
+
+    virtual ~Symbol() {}
 
     const string &getName() const {
         return name;
