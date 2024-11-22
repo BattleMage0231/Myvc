@@ -4,14 +4,11 @@ export import <filesystem>;
 import <memory>;
 import <vector>;
 
-export import symbol;
-export import commit;
-export import branch;
+import repository_store;
 
 namespace myvc {
 
 namespace fs = std::filesystem;
-using std::vector, std::unique_ptr;
 
 export class Repository {
     RepositoryStore store;

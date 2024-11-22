@@ -15,7 +15,7 @@ namespace myvc {
 
 namespace fs = std::filesystem;
 
-using std::invalid_argument, std::vector, std::unique_ptr, std::shared_ptr, std::map, std::reference_wrapper, std::variant, std::string;
+using std::invalid_argument, std::vector, std::unique_ptr, std::shared_ptr, std::map, std::reference_wrapper, std::variant, std::string, std::logic_error;
 
 using Head = std::variant<reference_wrapper<Branch>, const reference_wrapper<Commit>>;
 using ConstHead = std::variant<const reference_wrapper<Branch>, const reference_wrapper<Commit>>;
@@ -42,14 +42,14 @@ public:
     }
 
     void createCommit(unique_ptr<Commit> commit) {
-        const Hash &commitHash = commit.getHash();
-        const Hash &treeHash = commit.getTreeHash();
+        const Hash &commitHash = commit->getHash();
+        const Hash &treeHash = commit->getTreeHash();
         // todo test for tree
-        const vector<Hash> &parentHashes = commit.getParentHashes();
+        const vector<Hash> &parentHashes = commit->getParentHashes();
         for(const auto &commitHash : parentHashes) {
-            if(commits.find(treeHash) == commits.end()) throw logic_error {"RepositoryStore::createCommit() called with a commit with an invalid parent hash"};
+            if(commits.find(commitHash) == commits.end()) throw logic_error {"RepositoryStore::createCommit() called with a commit with an invalid parent hash"};
         }
-        entites.push_back(std::move(commit));
+        entities.push_back(std::move(commit));
         commits.insert({commitHash, entities.size() - 1});
     }
 
@@ -60,7 +60,7 @@ public:
 
     void createBranch(unique_ptr<Branch> branch) {
         const string &name = branch->getName();
-        const Hash &commit = *branch;
+        const Hash &commit = **branch;
         if(commits.find(commit) == commits.end()) throw logic_error {"RepositoryStore::createBranch() called with a branch with an invalid commit"};
         entities.push_back(std::move(branch));
         commits.insert({name, entities.size() - 1});
@@ -74,19 +74,19 @@ public:
     Head getHead() {
 
     }
+
+    void moveHead() {
+
+    }
+
+    void moveHead() {
+
+    }
     */
-
-    void moveHead() {
-
-    }
-
-    void moveHead() {
-
-    }
 
     void flush() {
         const fs::path &myvcPath = getMyvcPath();
-        for(const auto& e : entites) e.writeWithBase(myvcPath); 
+        for(const auto& e : entities) e->writeWithBase(myvcPath); 
     }
 
     ~RepositoryStore() {

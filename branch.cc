@@ -46,6 +46,10 @@ public:
     void move(const Hash &newHash) {
         commitHash = newHash;
     }
+
+    const string &getName() const {
+        return name;
+    }
 };
 
 }
