@@ -10,13 +10,13 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
     cout << "Hello, World" << endl;
-    shared_ptr<Commit> c1 = make_shared<Commit>();
-    shared_ptr<Commit> c2 = make_shared<Commit>();
-
-    
+    /*
+    unique_ptr<Tree> t1 = make_shared<Tree>(), t2 = make_shared<Tree>();
+    shared_ptr<Commit> c1 = make_shared<Commit>(t1);
+    shared_ptr<Commit> c2 = make_shared<Commit>(t2);
     Branch b1 {"branch 1", c1}, b2 {"branch 2", c2};
     unique_ptr<Symbol> a = make_unique<Branch>("head branch askdahs", c1);
-    Repository repo {std::move(a), vector<Branch> {b1, b2}};
+    Repository repo {std::move(a), vector<Branch> {a, b1, b2}}; // todo figure this out.. what should HEAD be?
     const Symbol &head = repo.getHead();
     cout << head.getName() << endl;
     try {
@@ -28,5 +28,6 @@ int main(int argc, char *argv[]) {
         cerr << e.what() << endl;
     }
     cout << "asdasd" << endl;
+    */
     return 0;
 }

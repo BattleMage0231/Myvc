@@ -1,5 +1,6 @@
 export module repository;
 
+export import <filesystem>;
 import <memory>;
 import <vector>;
 
@@ -9,19 +10,14 @@ export import branch;
 
 namespace myvc {
 
+namespace fs = std::filesystem;
 using std::vector, std::unique_ptr;
 
 export class Repository {
-    unique_ptr<Symbol> head;
-    vector<Branch> branches;
+    RepositoryStore store;
 
 public:
-    Repository(unique_ptr<Symbol> head, const vector<Branch>& branches) : 
-        head {std::move(head)}, branches {branches} {}
-
-    const Symbol &getHead() const {
-        return *head;
-    }
+    explicit Repository(const fs::path &path, bool create=false) : store {path, create} {} 
 };
 
 }
