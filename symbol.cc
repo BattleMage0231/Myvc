@@ -1,6 +1,8 @@
+module;
+#include <string>
+
 export module symbol;
 
-export import <string>;
 
 export import commit;
 

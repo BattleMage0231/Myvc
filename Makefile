@@ -5,7 +5,7 @@ myvc: object.o commit.o symbol.o branch.o repository.o myvc.o
 	$(CXX) -o myvc *.o
 
 dependencies:
-	$(CXXH) memory iostream sstream string vector stdexcept
+	echo hello
 
 myvc.o: dependencies
 	$(CXX) -c myvc.cc

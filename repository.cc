@@ -1,7 +1,8 @@
+module;
+#include <memory>
+#include <vector>
 export module repository;
 
-import <memory>;
-import <vector>;
 
 export import symbol;
 export import commit;

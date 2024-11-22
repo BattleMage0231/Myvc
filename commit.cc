@@ -1,7 +1,8 @@
+module;
+#include <memory>
+#include <stdexcept>
 export module commit;
 
-export import <memory>;
-import <stdexcept>;
 
 export import object;
 

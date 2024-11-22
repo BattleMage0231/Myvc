@@ -1,6 +1,9 @@
+module;
+
+#include <memory>
+
 export module branch;
 
-import <memory>;
 
 export import symbol;
 
