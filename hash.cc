@@ -23,9 +23,11 @@ public:
         }
     }
 
-    std::strong_ordering operator<=>(const HashTemp &other) const noexcept {
+    auto operator<=>(const HashTemp &other) const noexcept {
         return s <=> other.s;
     }
+
+    bool operator==(const HashTemp &) const noexcept = default;
 
     friend std::istream &operator>>(std::istream &in, HashTemp &tmp) {
         in >> tmp.s;

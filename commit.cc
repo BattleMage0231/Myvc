@@ -51,7 +51,7 @@ public:
         throw std::invalid_argument {"Commit::read() failed parsing"};
     }
 
-    Hash getHash() const override {
+    Hash getHash() const noexcept override {
         return Hash {"temporary_hash"};
     }
 

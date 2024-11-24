@@ -3,12 +3,17 @@ module;
 #include <filesystem>
 #include <stdexcept>
 #include <iostream>
-#include <map>
+#include <set>
 #include <optional>
 #include <fstream>
+#include <utility>
+#include <vector>
+#include <functional>
 
 export module repository_store;
 
+import object;
+import tree;
 import commit;
 import branch;
 import hash;
@@ -18,33 +23,54 @@ namespace myvc {
 
 namespace fs = std::filesystem;
 
-using std::map, std::string, std::ofstream;
+using std::set, std::string, std::vector;
 
 export class RepositoryStore final {
     fs::path path;
-    mutable map<Hash, Commit> commits;
-    mutable map<string, Branch> branches;
-    mutable std::optional<Head> head;
+    set<Commit> commits;
+    set<Tree> trees;
+    vector<Branch> branches;
+    std::optional<Head> head;
 
-    template<typename T> T fetch(const fs::path &entityPath) const {
+    template<typename T> T fetch(const fs::path &entityPath) {
         std::ifstream in {entityPath};
         return T::read(in);
+    }
+
+    template<typename T> void store(const T &data, const fs::path &path) {
+        std::ofstream out {path};
+        out << data;
     }
 
     fs::path getMyvcPath() const {
         return path / ".myvc";
     }
 
-    fs::path getObjectPath(const Hash &hash) const {
-        return getMyvcPath() / "objects" / static_cast<string>(hash);
+    fs::path getObjectPathFromHash(const Hash &h) const {
+        return getMyvcPath() / "objects" / static_cast<string>(h);
     }
 
-    fs::path getBranchPath(const string &name) const {
+    fs::path getObjectPath(const Object &o) const {
+        return getObjectPathFromHash(o.getHash());
+    }
+
+    fs::path getBranchPathFromName(const string &name) const {
         return getMyvcPath() / "refs" / "heads" / name;
+    }
+
+    fs::path getBranchPath(const Branch &b) const {
+        return getBranchPathFromName(b.getName());
     }
 
     fs::path getHeadPath() const {
         return getMyvcPath() / "HEAD";
+    }
+
+    std::optional<std::reference_wrapper<Branch>> getCachedBranch(const string &name) {
+        for(auto &b : branches) {
+            if(b.getName() == name) return b;
+        }
+        return {};
     }
 
 public:
@@ -60,62 +86,62 @@ public:
         }
     }
 
-    const Commit &getCommit(const Hash &hash) const {
-        if(commits.find(hash) == commits.end()) {
-            commits.insert_or_assign(hash, fetch<Commit>(getObjectPath(hash)));
+    const Commit &getCommit(const Hash &hash) {
+        for(const auto &c : commits) {
+            if(c.getHash() == hash) return c; 
         }
-        return commits.at(hash);
+        return createCommit(fetch<Commit>(getObjectPathFromHash(hash)));
     }
 
-    Commit &createCommit(Commit commit) {
-        Hash commitHash = commit.getHash();
-        // todo check the values
-        commits.insert_or_assign(commitHash, std::move(commit));
-        return commits.at(commitHash);
+    const Commit &createCommit(Commit commit) {
+        auto res = commits.insert(std::move(commit));
+        return *res.first;
     }
 
-    const Branch &getBranch(const string &name) const {
-        if(branches.find(name) == branches.end()) {
-            branches.insert_or_assign(name, fetch<Branch>(getBranchPath(name)));
+    const Tree &getTree(const Hash &hash) {
+        for(const auto &c : trees) {
+            if(c.getHash() == hash) return c; 
         }
-        return branches.at(name);
+        return createTree(fetch<Tree>(getObjectPathFromHash(hash)));
     }
 
-    void updateBranch(Branch branch) {
-        const string &name = branch.getName();
-        // todo check the values
-        branches.insert_or_assign(name, std::move(branch));
+    const Tree &createTree(Tree tree) {
+        auto res = trees.insert(std::move(tree));
+        return *res.first;
     }
 
-    const Head &getHead() const {
+    Branch &getBranch(const string &name) {
+        auto cached = getCachedBranch(name);
+        if(cached) return cached.value();
+        else return createBranch(fetch<Branch>(getBranchPathFromName(name)));
+    }
+
+    Branch &createBranch(Branch branch) {
+        auto cached = getCachedBranch(branch.getName());
+        if(cached) {
+            throw std::invalid_argument {"Branch::createBranch() called on branch with existing name"};
+        } else {
+            branches.push_back(std::move(branch));
+            return branches.back();
+        }
+    }
+
+    Head &getHead() {
         if(!head) head = fetch<Head>(getHeadPath());
         return head.value();
     }
 
-    void updateHead(Head newHead) {
-        head = std::move(newHead);
-    }
-
     void flush() {
-        if(!commits.empty()) {
+        if(!commits.empty() || !trees.empty()) {
             if(!fs::exists(getMyvcPath() / "objects")) fs::create_directory(getMyvcPath() / "objects");
-            for(const auto &pair : commits) {
-                ofstream out {getObjectPath(pair.first)};
-                std::cout << getObjectPath(pair.first) << std::endl;
-                out << pair.second;
-            }
+            for(const auto &v : commits) store(v, getObjectPath(v));
+            for(const auto &v : trees) store(v, getObjectPath(v));
         }
         if(!branches.empty()) {
-            for(const auto &pair : branches) {
-                if(!fs::exists(getMyvcPath() / "refs")) fs::create_directory(getMyvcPath() / "refs");
-                ofstream out {getObjectPath(pair.first)};
-                out << pair.second;
-            }
+            if(!fs::exists(getMyvcPath() / "refs")) fs::create_directory(getMyvcPath() / "refs");
+            for(const auto &v : branches) store(v, getBranchPath(v));
         }
-        if(head) {
-            ofstream out {getHeadPath()};
-            out << *head;
-        }
+        if(head) store(head.value(), getHeadPath());
     }
 
     ~RepositoryStore() {
@@ -126,4 +152,3 @@ public:
 };
 
 }
-
