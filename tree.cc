@@ -1,10 +1,8 @@
 module;
 
 #include <set>
-#include <variant>
 #include <string>
 #include <stdexcept>
-#include <variant>
 #include <compare>
 
 export module tree;
