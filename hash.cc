@@ -9,7 +9,7 @@ export module hash;
 
 namespace myvc {
 
-using std::istream, std::ostream, std::string, std::invalid_argument;
+using std::string;
 
 struct HashTemp {
     string s;
@@ -19,20 +19,20 @@ public:
 
     HashTemp(string s) : s {std::move(s)} {
         for(char c : s) {
-            if(c == ' ' || c == '\n') throw invalid_argument {"HashTemp::HashTemp() called with invalid string"};
+            if(c == ' ' || c == '\n') throw std::invalid_argument {"HashTemp::HashTemp() called with invalid string"};
         }
     }
 
-    std::strong_ordering operator<=>(const HashTemp &other) const {
+    std::strong_ordering operator<=>(const HashTemp &other) const noexcept {
         return s <=> other.s;
     }
 
-    friend istream &operator>>(istream &in, HashTemp &tmp) {
+    friend std::istream &operator>>(std::istream &in, HashTemp &tmp) {
         in >> tmp.s;
         return in;
     }
 
-    friend ostream &operator<<(ostream &out, const HashTemp &tmp) {
+    friend std::ostream &operator<<(std::ostream &out, const HashTemp &tmp) noexcept {
         out << tmp.s;
         return out;
     }

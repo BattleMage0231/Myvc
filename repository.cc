@@ -2,11 +2,11 @@ module;
 
 #include <iostream>
 #include <filesystem>
-#include <memory>
-#include <vector>
 
 export module repository;
 
+import hash;
+import commit;
 import repository_store;
 
 namespace myvc {

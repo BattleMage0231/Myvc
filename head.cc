@@ -1,27 +1,26 @@
 module;
 
 #include <iostream>
-#include <memory>
 #include <stdexcept>
 #include <variant>
 
 export module head;
 
-export import hash;
-export import writable;
-export import branch;
-export import commit;
+import hash;
+import writable;
+import branch;
+import commit;
 
 namespace myvc {
 
-using std::string, std::unique_ptr, std::make_unique, std::ostream, std::istream, std::invalid_argument, std::variant, std::reference_wrapper, std::holds_alternative, std::get;
+using std::string, std::variant, std::holds_alternative, std::get;
 
 using HeadState = variant<Hash, string>;
 
 export class Head : public Writable {
     HeadState state;
 
-    void write(ostream &out) const noexcept override {
+    void write(std::ostream &out) const noexcept override {
         out << "Head" << '\n';
         if(isBranch()) {
             out << "Branch" << '\n' << get<string>(state) << '\n';
@@ -35,7 +34,7 @@ public:
 
     Head(Hash hash) : state {std::move(hash)} {}
 
-    static Head read(istream &in) {
+    static Head read(std::istream &in) {
         string s, t; Hash h;
         if(s == "Head" && t == "Branch") {
             in >> s;
@@ -44,14 +43,14 @@ public:
             in >> h;
             return Head {h};
         }
-        throw invalid_argument {"Head::read() failed parsing"};
+        throw std::invalid_argument {"Head::read() failed parsing"};
     }
 
-    bool isBranch() const {
+    bool isBranch() const noexcept {
         return holds_alternative<string>(state);
     }
 
-    const HeadState &operator*() const {
+    const HeadState &operator*() const noexcept {
         return state;
     }
 
