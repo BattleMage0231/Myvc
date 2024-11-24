@@ -8,7 +8,6 @@ module;
 export module commit;
 
 import object;
-import tree;
 import hash;
 
 namespace myvc {

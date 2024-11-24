@@ -15,7 +15,7 @@ namespace myvc {
 
 using std::string, std::variant, std::holds_alternative, std::get;
 
-using HeadState = variant<Hash, string>;
+export using HeadState = variant<Hash, string>;
 
 export class Head : public Writable {
     HeadState state;
@@ -54,12 +54,8 @@ public:
         return state;
     }
 
-    void move(Hash newCommit) {
-        state = std::move(newCommit);
-    }
-
-    void move(string newBranch) {
-        state = std::move(newBranch);
+    void move(HeadState newState) {
+        state = std::move(newState);
     }
 };
 

@@ -74,13 +74,6 @@ public:
         return commits.at(commitHash);
     }
 
-    Branch &getBranch(const string &name) {
-        if(branches.find(name) == branches.end()) {
-            branches.insert_or_assign(name, fetch<Branch>(getBranchPath(name)));
-        }
-        return branches.at(name);
-    }
-
     const Branch &getBranch(const string &name) const {
         if(branches.find(name) == branches.end()) {
             branches.insert_or_assign(name, fetch<Branch>(getBranchPath(name)));
@@ -88,11 +81,10 @@ public:
         return branches.at(name);
     }
 
-    Branch &createBranch(Branch branch) {
+    void updateBranch(Branch branch) {
         const string &name = branch.getName();
         // todo check the values
         branches.insert_or_assign(name, std::move(branch));
-        return branches.at(name);
     }
 
     const Head &getHead() const {
@@ -100,9 +92,8 @@ public:
         return head.value();
     }
 
-    Head &getHead() {
-        if(!head) head = fetch<Head>(getHeadPath());
-        return head.value();
+    void updateHead(Head newHead) {
+        head = std::move(newHead);
     }
 
     void flush() {
