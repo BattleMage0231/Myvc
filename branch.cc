@@ -1,15 +1,16 @@
-export module branch;
+module;
 
-import <iostream>;
-import <memory>;
-import <stdexcept>;
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+
+export module branch;
 
 export import hash;
 export import writable;
 
 namespace myvc {
 
-namespace fs = std::filesystem;
 using std::string, std::unique_ptr, std::make_unique, std::ostream, std::istream, std::invalid_argument;
 
 export class Branch : public Writable {
@@ -20,21 +21,21 @@ export class Branch : public Writable {
         out << "Branch" << '\n' << name << '\n' << commitHash << '\n';
     }
 
-    fs::path getPath(const fs::path &base) const override {
-        return base / "refs" / name;
-    }
-
 public:
-    Branch(const string &name, const Hash &commitHash) : name {name}, commitHash {commitHash} {
-        if(name.find('\n') != string::npos) throw invalid_argument {"Branch::Branch() called with newline in name"};
+    Branch(string name, Hash commitHash) : name {std::move(name)}, commitHash {std::move(commitHash)} {
+        for(char c : name) {
+            if(!(('a' <= c && c <= 'z') && ('a' <= c && c <= 'z'))) {
+                throw invalid_argument {"Branch::Branch() called with newline in name"};
+            }
+        }
     }
 
-    static unique_ptr<Branch> read(istream &in) {
+    static Branch read(istream &in) {
         string s; Hash h;
         in >> s;
         if(s == "Branch") {
             in >> s >> h;
-            return make_unique<Branch>(s, h);
+            return Branch {s, h};
         }
         throw invalid_argument {"Branch::read() failed parsing"};
     }
@@ -43,8 +44,8 @@ public:
         return commitHash;
     }
 
-    void move(const Hash &newHash) {
-        commitHash = newHash;
+    void move(Hash newHash) {
+        commitHash = std::move(newHash);
     }
 
     const string &getName() const {

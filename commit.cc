@@ -1,9 +1,12 @@
-export module commit;
+module;
 
-export import <memory>;
-export import <chrono>;
-import <stdexcept>;
-import <vector>;
+#include <iostream>
+#include <memory>
+#include <chrono>
+#include <stdexcept>
+#include <vector>
+
+export module commit;
 
 export import object;
 export import tree;
@@ -11,7 +14,7 @@ export import hash;
 
 namespace myvc {
 
-using std::unique_ptr, std::shared_ptr, std::make_shared, std::logic_error, std::invalid_argument, std::string, std::vector, std::ostream, std::istream;
+using std::unique_ptr, std::shared_ptr, std::make_shared, std::logic_error, std::invalid_argument, std::string, std::vector, std::ostream, std::istream, std::getline;
 using namespace std::chrono;
 using datetime = time_point<system_clock>;
 
@@ -28,13 +31,13 @@ export class Commit : public Object {
     }
 
 public:
-    explicit Commit(const Hash &treeHash, const vector<Hash> &parentHashes = {}, const datetime &time = system_clock::now(), const string &msg = "") :
-        treeHash {treeHash}, parentHashes {parentHashes}, time {time}, msg {msg}
+    explicit Commit(Hash treeHash, vector<Hash> parentHashes = {}, datetime time = system_clock::now(), string msg = "") :
+        treeHash {std::move(treeHash)}, parentHashes {std::move(parentHashes)}, time {std::move(time)}, msg {std::move(msg)}
     {
         if(msg.find('\n') != string::npos) throw invalid_argument {"Commit::Commit() called with newline in msg"};
     }
 
-    static unique_ptr<Commit> read(istream &in) {
+    static Commit read(istream &in) {
         string s; Hash h, k; size_t n; vector<Hash> v; time_t t;
         in >> s;
         if(s == "Commit") {
@@ -43,14 +46,15 @@ public:
                 in >> k;
                 v.push_back(k);
             }
-            in >> t >> s;
-            return make_unique<Commit>(h, v, system_clock::from_time_t(t), s);
+            in >> t;
+            getline(in, s);
+            return Commit {h, v, system_clock::from_time_t(t), s};
         }
         throw invalid_argument {"Commit::read() failed parsing"};
     }
 
-    const Hash &getHash() const override {
-        return "TEMP HASH";
+    Hash getHash() const override {
+        return Hash {"temporary_hash"};
     }
 
     bool isRoot() const {

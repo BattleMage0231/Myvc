@@ -1,92 +1,132 @@
+module;
+
+#include <filesystem>
+#include <stdexcept>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <variant>
+#include <optional>
+#include <fstream>
+
 export module repository_store;
 
-export import <filesystem>;
-export import <stdexcept>;
-import <vector>;
-import <map>;
-import <memory>;
-import <variant>;
-
-import commit;
-import branch;
-import hash;
+export import commit;
+export import branch;
+export import hash;
+export import head;
 
 namespace myvc {
 
 namespace fs = std::filesystem;
 
-using std::invalid_argument, std::vector, std::unique_ptr, std::shared_ptr, std::map, std::reference_wrapper, std::variant, std::string, std::logic_error;
-
-using Head = std::variant<reference_wrapper<Branch>, const reference_wrapper<Commit>>;
-using ConstHead = std::variant<const reference_wrapper<Branch>, const reference_wrapper<Commit>>;
+using std::invalid_argument, std::unique_ptr, std::map, std::variant, std::string, std::logic_error, std::optional, std::ifstream, std::ofstream;
 
 export class RepositoryStore final {
     fs::path path;
-    vector<unique_ptr<Writable>> entities;
-    map<Hash, size_t> commits;
-    map<string, size_t> branches;
+    mutable map<Hash, Commit> commits;
+    mutable map<string, Branch> branches;
+    mutable optional<Head> head;
 
-public:
-    explicit RepositoryStore(const fs::path &path, bool create=false) : path {path} {
-        // todo validate
-        // todo implement create
+    template<typename T> T fetch(const fs::path &entityPath) const {
+        ifstream in {entityPath};
+        return T::read(in);
     }
 
     fs::path getMyvcPath() const {
         return path / ".myvc";
     }
 
-    const Commit &getCommit(const Hash &hash) {
-        const auto &entity = entities.at(commits.at(hash));
-        return dynamic_cast<Commit &>(*entity);
+    fs::path getObjectPath(const Hash &hash) const {
+        return getMyvcPath() / "objects" / static_cast<string>(hash);
     }
 
-    void createCommit(unique_ptr<Commit> commit) {
-        const Hash &commitHash = commit->getHash();
-        const Hash &treeHash = commit->getTreeHash();
-        // todo test for tree
-        const vector<Hash> &parentHashes = commit->getParentHashes();
-        for(const auto &commitHash : parentHashes) {
-            if(commits.find(commitHash) == commits.end()) throw logic_error {"RepositoryStore::createCommit() called with a commit with an invalid parent hash"};
+    fs::path getBranchPath(const string &name) const {
+        return getMyvcPath() / "refs" / "heads" / name;
+    }
+
+    fs::path getHeadPath() const {
+        return getMyvcPath() / "HEAD";
+    }
+
+public:
+    explicit RepositoryStore(const fs::path &path, bool create=false) {
+        if(!fs::exists(path) || !fs::is_directory(path)) throw invalid_argument {"RepositoryStore::RepositoryStore() called with invalid path"};
+        this->path = fs::canonical(path);
+        if(!fs::exists(getMyvcPath())) {
+            if(create) {
+                fs::create_directories(getMyvcPath());
+            } else {
+                throw invalid_argument {"RepositoryStore::RepositoryStore() called with path that is not a repository and create=false"};
+            }
         }
-        entities.push_back(std::move(commit));
-        commits.insert({commitHash, entities.size() - 1});
+    }
+
+    const Commit &getCommit(const Hash &hash) const {
+        if(commits.find(hash) == commits.end()) {
+            commits.insert_or_assign(hash, fetch<Commit>(getObjectPath(hash)));
+        }
+        return commits.at(hash);
+    }
+
+    Commit &createCommit(Commit commit) {
+        Hash commitHash = commit.getHash();
+        // todo check the values
+        commits.insert_or_assign(commitHash, std::move(commit));
+        return commits.at(commitHash);
     }
 
     Branch &getBranch(const string &name) {
-        const auto &entity = entities.at(branches.at(name));
-        return dynamic_cast<Branch &>(*entity);
+        if(branches.find(name) == branches.end()) {
+            branches.insert_or_assign(name, fetch<Branch>(getBranchPath(name)));
+        }
+        return branches.at(name);
     }
 
-    void createBranch(unique_ptr<Branch> branch) {
-        const string &name = branch->getName();
-        const Hash &commit = **branch;
-        if(commits.find(commit) == commits.end()) throw logic_error {"RepositoryStore::createBranch() called with a branch with an invalid commit"};
-        entities.push_back(std::move(branch));
-        commits.insert({name, entities.size() - 1});
+    const Branch &getBranch(const string &name) const {
+        if(branches.find(name) == branches.end()) {
+            branches.insert_or_assign(name, fetch<Branch>(getBranchPath(name)));
+        }
+        return branches.at(name);
     }
 
-    /*
-    ConstHead getHead() const {
-
+    Branch &createBranch(Branch branch) {
+        const string &name = branch.getName();
+        // todo check the values
+        branches.insert_or_assign(name, std::move(branch));
+        return branches.at(name);
     }
 
-    Head getHead() {
-
+    const Head &getHead() const {
+        if(!head) head = fetch<Head>(getHeadPath());
+        return head.value();
     }
 
-    void moveHead() {
-
+    Head &getHead() {
+        if(!head) head = fetch<Head>(getHeadPath());
+        return head.value();
     }
-
-    void moveHead() {
-
-    }
-    */
 
     void flush() {
-        const fs::path &myvcPath = getMyvcPath();
-        for(const auto& e : entities) e->writeWithBase(myvcPath); 
+        if(!commits.empty()) {
+            if(!fs::exists(getMyvcPath() / "objects")) fs::create_directory(getMyvcPath() / "objects");
+            for(const auto &pair : commits) {
+                ofstream out {getObjectPath(pair.first)};
+                std::cout << getObjectPath(pair.first) << std::endl;
+                out << pair.second;
+            }
+        }
+        if(!branches.empty()) {
+            for(const auto &pair : branches) {
+                if(!fs::exists(getMyvcPath() / "refs")) fs::create_directory(getMyvcPath() / "refs");
+                ofstream out {getObjectPath(pair.first)};
+                out << pair.second;
+            }
+        }
+        if(head) {
+            ofstream out {getHeadPath()};
+            out << *head;
+        }
     }
 
     ~RepositoryStore() {
