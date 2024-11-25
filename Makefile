@@ -10,7 +10,7 @@ myvc.o: repository.o myvc.cc
 repository.o: repository_store.o repository.cc
 	$(CXX) -c repository.cc
 
-repository_store.o: commit.o branch.o hash.o head.o tree.o repository_store.cc
+repository_store.o: commit.o branch.o hash.o head.o tree.o blob.o repository_store.cc
 	$(CXX) -c repository_store.cc
 
 branch.o: hash.o writable.o branch.cc
@@ -36,6 +36,9 @@ head.o: hash.o writable.o branch.o commit.o head.cc
 
 blob.o: hash.o object.o blob.cc
 	$(CXX) -c blob.cc
+
+serialization.o: serialization.cc
+	$(CXX) -c serialization.cc
 
 clean:
 	rm -r gcm.cache *.o myvc

@@ -18,6 +18,7 @@ import commit;
 import branch;
 import hash;
 import head;
+import blob;
 
 namespace myvc {
 
@@ -29,6 +30,7 @@ export class RepositoryStore final {
     fs::path path;
     set<Commit> commits;
     set<Tree> trees;
+    set<Blob> blobs;
     vector<Branch> branches;
     std::optional<Head> head;
 
@@ -110,6 +112,18 @@ public:
         return *res.first;
     }
 
+    const Blob &getBlob(const Hash &hash) {
+        for(const auto &c : blobs) {
+            if(c.getHash() == hash) return c; 
+        }
+        return createBlob(fetch<Blob>(getObjectPathFromHash(hash)));
+    }
+
+    const Blob &createBlob(Blob blob) {
+        auto res = blobs.insert(std::move(blob));
+        return *res.first;
+    }
+
     Branch &getBranch(const string &name) {
         auto cached = getCachedBranch(name);
         if(cached) return cached.value();
@@ -136,6 +150,7 @@ public:
             if(!fs::exists(getMyvcPath() / "objects")) fs::create_directory(getMyvcPath() / "objects");
             for(const auto &v : commits) store(v, getObjectPath(v));
             for(const auto &v : trees) store(v, getObjectPath(v));
+            for(const auto &v : blobs) store(v, getObjectPath(v));
         }
         if(!branches.empty()) {
             if(!fs::exists(getMyvcPath() / "refs")) fs::create_directory(getMyvcPath() / "refs");
