@@ -28,13 +28,11 @@ public:
 
 private:
     std::map<fs::path, Hash> blobs;
-    std::unique_ptr<Provider> prov;
+    std::shared_ptr<Provider> prov;
 
 public:
-    explicit Index(std::map<fs::path, Hash> blobs = {}, std::unique_ptr<Provider> prov = {});
-    explicit Index(std::istream &, std::unique_ptr<Provider> prov = {});
-    Index(const Index &);
-    Index &operator=(const Index &);
+    explicit Index(std::map<fs::path, Hash> blobs = {}, std::shared_ptr<Provider> prov = {});
+    explicit Index(std::istream &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
@@ -45,7 +43,7 @@ public:
     void removeFile(const fs::path &);
     Blob getFile(const fs::path &) const;
     Tree applyChanges(const Tree &) const;
-    void setProvider(std::unique_ptr<Provider>);
+    void setProvider(std::shared_ptr<Provider>);
 };
 
 }
