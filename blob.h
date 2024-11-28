@@ -24,6 +24,7 @@ private:
 public:
     explicit Blob(std::vector<char> data = {}, std::unique_ptr<Provider> prov = {});
     explicit Blob(Hash, std::unique_ptr<Provider>);
+    explicit Blob(std::istream &, std::unique_ptr<Provider> prov = {});
     Blob(const Blob &);
     Blob &operator=(const Blob &);
 

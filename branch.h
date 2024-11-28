@@ -28,6 +28,7 @@ private:
 public:
     explicit Branch(std::string name = {}, Hash commitHash = {}, std::unique_ptr<Provider> prov = {});
     explicit Branch(std::string, std::unique_ptr<Provider>);
+    explicit Branch(std::istream &, std::unique_ptr<Provider> prov = {});
     Branch(const Branch &);
     Branch &operator=(const Branch &);
 

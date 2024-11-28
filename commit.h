@@ -30,6 +30,7 @@ private:
 public:
     explicit Commit(Hash parentHash = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {}, std::unique_ptr<Provider> prov = {});
     explicit Commit(Hash, std::unique_ptr<Provider>);
+    explicit Commit(std::istream &, std::unique_ptr<Provider> prov = {});
     Commit(const Commit &);
     Commit &operator=(const Commit &);
 

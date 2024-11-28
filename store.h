@@ -30,8 +30,11 @@ class RepositoryStore :
     fs::path getHeadPath() const;
     fs::path getIndexPath() const;
 
+    template<typename T> T load(const fs::path &) const;
+    void store(const fs::path &, const Serializable &s); 
+
 public:
-    explicit RepositoryStore(const fs::path &, bool create=false);
+    explicit RepositoryStore(fs::path);
 
     Commit getCommit(Hash) const override;
     void createCommit(const Commit &) override;
@@ -53,6 +56,8 @@ public:
     void setWorkingTree(const Tree &);
 
     Hash resolvePartialHash(const std::string &);
+
+    static void createAt(const fs::path &);
 };
 
 }

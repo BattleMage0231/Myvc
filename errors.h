@@ -16,4 +16,11 @@ public:
     }
 };
 
+class not_implemented : public std::exception {
+public:
+    const char *what() const noexcept {
+        return "Not implemented";
+    }
+};
+
 }

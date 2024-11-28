@@ -25,6 +25,7 @@ private:
 public:
     explicit Head(std::variant<std::string, Hash> state = {}, std::unique_ptr<Provider> prov = {});
     explicit Head(std::unique_ptr<Provider>);
+    explicit Head(std::istream &, std::unique_ptr<Provider> prov = {});
     Head(const Head &);
     Head &operator=(const Head &);
 

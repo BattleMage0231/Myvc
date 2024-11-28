@@ -33,6 +33,7 @@ private:
 public:
     explicit Tree(std::map<std::string, Node> nodes = {}, std::unique_ptr<Provider> prov = {});
     explicit Tree(Hash, std::unique_ptr<Provider>);
+    explicit Tree(std::istream &, std::unique_ptr<Provider> prov = {});
     Tree(const Tree &);
     Tree &operator=(const Tree &);
 

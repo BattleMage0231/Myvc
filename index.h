@@ -33,6 +33,7 @@ private:
 public:
     explicit Index(std::map<fs::path, Hash> blobs = {}, std::unique_ptr<Provider> prov = {});
     explicit Index(std::unique_ptr<Provider>);
+    explicit Index(std::istream &, std::unique_ptr<Provider> prov = {});
     Index(const Index &);
     Index &operator=(const Index &);
 
