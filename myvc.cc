@@ -1,13 +1,8 @@
-#include <iostream>
-
-import repository;
-
-using namespace myvc;
-using namespace std;
+#include "executor.h"
 
 int main(int argc, char *argv[]) {
-    Repository r {"./tests/repo1", false};
-    r.testFunction();
-    cout << "Hello World" << endl;
+    std::vector<std::string> args {argv, argv + argc};
+    myvc::CommandExecutor c {args};
+    c.execute();
     return 0;
 }
