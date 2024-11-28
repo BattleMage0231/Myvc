@@ -23,11 +23,8 @@ private:
     std::variant<std::string, Hash> state;
 
 public:
-    explicit Head(std::variant<std::string, Hash> state = {}, std::unique_ptr<Provider> prov = {});
-    explicit Head(std::unique_ptr<Provider>);
-    explicit Head(std::istream &, std::unique_ptr<Provider> prov = {});
-    Head(const Head &);
-    Head &operator=(const Head &);
+    explicit Head(std::variant<std::string, Hash> state = {}, std::shared_ptr<Provider> prov = {});
+    explicit Head(std::istream &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
@@ -38,7 +35,7 @@ public:
     Commit operator*() const;
     std::optional<Branch> getBranch() const;
     void setState(std::variant<std::string, Hash>);
-    void setProvider(std::unique_ptr<Provider>);
+    void setProvider(std::shared_ptr<Provider>);
 };
 
 }

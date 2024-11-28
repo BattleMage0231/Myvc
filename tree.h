@@ -28,14 +28,11 @@ public:
 
 private:
     std::map<std::string, Node> nodes;
-    std::unique_ptr<Provider> prov;
+    std::shared_ptr<Provider> prov;
 
 public:
-    explicit Tree(std::map<std::string, Node> nodes = {}, std::unique_ptr<Provider> prov = {});
-    explicit Tree(Hash, std::unique_ptr<Provider>);
-    explicit Tree(std::istream &, std::unique_ptr<Provider> prov = {});
-    Tree(const Tree &);
-    Tree &operator=(const Tree &);
+    explicit Tree(std::map<std::string, Node> nodes = {}, std::shared_ptr<Provider> prov = {});
+    explicit Tree(std::istream &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
@@ -43,7 +40,7 @@ public:
 
     Hash getHash() const override;
 
-    void setProvider(std::unique_ptr<Provider>);
+    void setProvider(std::shared_ptr<Provider>);
 };
 
 }

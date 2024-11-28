@@ -25,14 +25,11 @@ private:
     Hash parentHash, treeHash;
     time_t time;
     std::string msg;
-    std::unique_ptr<Provider> prov;
+    std::shared_ptr<Provider> prov;
 
 public:
-    explicit Commit(Hash parentHash = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {}, std::unique_ptr<Provider> prov = {});
-    explicit Commit(Hash, std::unique_ptr<Provider>);
-    explicit Commit(std::istream &, std::unique_ptr<Provider> prov = {});
-    Commit(const Commit &);
-    Commit &operator=(const Commit &);
+    explicit Commit(Hash parentHash = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {}, std::shared_ptr<Provider> prov = {});
+    explicit Commit(std::istream &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
@@ -48,7 +45,7 @@ public:
     void setTime(time_t);
     const std::string &getMsg() const;
     void setMsg(std::string);
-    void setProvider(std::unique_ptr<Provider>);
+    void setProvider(std::shared_ptr<Provider>);
 };
 
 }

@@ -19,14 +19,11 @@ public:
 
 private:
     std::vector<char> data;
-    std::unique_ptr<Provider> prov;
+    std::shared_ptr<Provider> prov;
 
 public:
-    explicit Blob(std::vector<char> data = {}, std::unique_ptr<Provider> prov = {});
-    explicit Blob(Hash, std::unique_ptr<Provider>);
-    explicit Blob(std::istream &, std::unique_ptr<Provider> prov = {});
-    Blob(const Blob &);
-    Blob &operator=(const Blob &);
+    explicit Blob(std::vector<char> data = {}, std::shared_ptr<Provider> prov = {});
+    explicit Blob(std::istream &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
@@ -36,7 +33,7 @@ public:
 
     std::vector<char> &getData();
     const std::vector<char> &getData() const;
-    void setProvider(std::unique_ptr<Provider>);
+    void setProvider(std::shared_ptr<Provider>);
 };
 
 }

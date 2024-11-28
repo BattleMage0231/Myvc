@@ -23,14 +23,11 @@ public:
 private:
     std::string name;
     Hash commitHash;
-    std::unique_ptr<Provider> prov;
+    std::shared_ptr<Provider> prov;
 
 public:
-    explicit Branch(std::string name = {}, Hash commitHash = {}, std::unique_ptr<Provider> prov = {});
-    explicit Branch(std::string, std::unique_ptr<Provider>);
-    explicit Branch(std::istream &, std::unique_ptr<Provider> prov = {});
-    Branch(const Branch &);
-    Branch &operator=(const Branch &);
+    explicit Branch(std::string name = {}, Hash commitHash = {}, std::shared_ptr<Provider> prov = {});
+    explicit Branch(std::istream &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
@@ -42,7 +39,7 @@ public:
     Commit getCommit() const;
     void setCommit(Hash);
     Commit operator*() const;
-    void setProvider(std::unique_ptr<Provider>);
+    void setProvider(std::shared_ptr<Provider>);
 };
 
 }

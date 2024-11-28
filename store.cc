@@ -34,7 +34,8 @@ RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {}
 
 template<typename T> T RepositoryStore::load(const fs::path &path) const {
     std::ifstream in {path, std::ios::binary};
-    return T {in, std::make_unique<RepositoryStore>(*this)};
+    std::shared_ptr<RepositoryStore> copy;
+    return T {in, std::make_shared<RepositoryStore>(*this)};
 }
 
 void RepositoryStore::store(const fs::path &path, const Serializable &s) {
