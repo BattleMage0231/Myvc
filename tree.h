@@ -31,6 +31,9 @@ private:
     std::shared_ptr<Provider> prov;
 
 public:
+    using Iterator = int;
+    using ConstIterator = int;
+
     explicit Tree(std::map<std::string, Node> nodes = {}, std::shared_ptr<Provider> prov = {});
     explicit Tree(std::istream &, std::shared_ptr<Provider> prov = {});
 
@@ -41,6 +44,11 @@ public:
     Hash getHash() const override;
 
     void setProvider(std::shared_ptr<Provider>);
+
+    Iterator begin();
+    Iterator end();
+    ConstIterator begin() const;
+    ConstIterator end() const;
 };
 
 }
