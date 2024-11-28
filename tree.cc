@@ -51,6 +51,14 @@ Hash Tree::getHash() const {
     throw not_implemented {};
 }
 
+std::map<std::string, Tree::Node> &Tree::getNodes() {
+    return nodes;
+}
+
+const std::map<std::string, Tree::Node> &Tree::getNodes() const {
+    return nodes;
+}
+
 void Tree::setProvider(std::shared_ptr<Provider> prov) {
     this->prov = prov;
 }

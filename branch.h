@@ -17,6 +17,7 @@ public:
     public:
         virtual Branch getBranch(const std::string &) const = 0;
         virtual void updateBranch(const Branch &) = 0;
+        virtual Commit getCommit(Hash) const = 0;
         virtual ~Provider() {};
     };
 

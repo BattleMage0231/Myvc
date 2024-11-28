@@ -43,6 +43,8 @@ public:
 
     Hash getHash() const override;
 
+    std::map<std::string, Node> &getNodes();
+    const std::map<std::string, Node> &getNodes() const;
     void setProvider(std::shared_ptr<Provider>);
 
     Iterator begin();
