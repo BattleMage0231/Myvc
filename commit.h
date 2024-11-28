@@ -33,8 +33,8 @@ public:
     Commit(const Commit &);
     Commit &operator=(const Commit &);
 
-    std::vector<char> serialize() const override;
-    void deserialize(std::vector<char>) override;
+    void write(std::ostream &) const override;
+    void read(std::istream &) override;
     void store() override;
 
     Hash getHash() const override;

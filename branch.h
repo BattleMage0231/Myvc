@@ -5,13 +5,13 @@
 #include <memory>
 #include <string>
 #include <ctime>
-#include "synced.h"
+#include "stored.h"
 #include "hash.h"
 #include "commit.h"
 
 namespace myvc {
 
-class Branch : public Synced {
+class Branch : public Stored {
 public:
     class Provider {
     public:
@@ -31,8 +31,8 @@ public:
     Branch(const Branch &);
     Branch &operator=(const Branch &);
 
-    std::vector<char> serialize() const override;
-    void deserialize(std::vector<char>) override;
+    void write(std::ostream &) const override;
+    void read(std::istream &) override;
     void reload() override;
     void store() override;
 

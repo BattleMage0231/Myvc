@@ -1,11 +1,11 @@
 #pragma once
 
-#include "synced.h"
+#include "stored.h"
 #include "hash.h"
 
 namespace myvc {
 
-class Object : public Synced {
+class Object : public Stored {
 public:
     void reload() override {}
 

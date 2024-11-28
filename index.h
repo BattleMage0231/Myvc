@@ -15,7 +15,7 @@ namespace myvc {
 
 namespace fs = std::filesystem;
 
-class Index : public Synced {
+class Index : public Stored {
 public:
     class Provider {
     public:
@@ -36,8 +36,8 @@ public:
     Index(const Index &);
     Index &operator=(const Index &);
 
-    std::vector<char> serialize() const override;
-    void deserialize(std::vector<char>) override;
+    void write(std::ostream &) const override;
+    void read(std::istream &) override;
     void reload() override;
     void store() override;
 

@@ -2,13 +2,13 @@
 
 #include <optional>
 #include <variant>
-#include "synced.h"
+#include "stored.h"
 #include "commit.h"
 #include "branch.h"
 
 namespace myvc {
 
-class Head : public Synced {
+class Head : public Stored {
 public:
     class Provider {
     public:
@@ -28,8 +28,8 @@ public:
     Head(const Head &);
     Head &operator=(const Head &);
 
-    std::vector<char> serialize() const override;
-    void deserialize(std::vector<char>) override;
+    void write(std::ostream &) const override;
+    void read(std::istream &) override;
     void reload() override;
     void store() override;
 
