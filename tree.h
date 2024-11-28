@@ -18,9 +18,12 @@ public:
         virtual ~Provider() {};
     };
 
-    struct Node {
+    struct Node : public Serializable {
         bool isBlob;
         Hash dataHash;
+
+        void write(std::ostream &) const override;
+        void read(std::istream &) override;
     };
 
 private:
