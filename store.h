@@ -30,8 +30,13 @@ class RepositoryStore :
     fs::path getHeadPath() const;
     fs::path getIndexPath() const;
 
+    std::shared_ptr<RepositoryStore> getInstance() const;
+
     template<typename T> T load(const fs::path &) const;
-    void store(const fs::path &, const Serializable &s); 
+    void store(const fs::path &, const Serializable &); 
+
+    Tree getTreeAt(const fs::path &);
+    void setTreeAt(const fs::path &, const Tree &);
 
 public:
     explicit RepositoryStore(fs::path);
@@ -52,10 +57,10 @@ public:
     Index getIndex() const override;
     void updateIndex(const Index &) override;
 
-    Tree getWorkingTree() const;
+    Tree getWorkingTree();
     void setWorkingTree(const Tree &);
 
-    Hash resolvePartialHash(const std::string &);
+    Hash resolvePartialObjectHash(const std::string &);
 
     static void createAt(const fs::path &);
 };

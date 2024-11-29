@@ -1,4 +1,5 @@
 *.o
+*.d
 myvc
 failed/
 gcm.cache/

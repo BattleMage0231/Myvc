@@ -10,6 +10,10 @@ void RepositoryStore::createAt(const fs::path &path) {
     fs::create_directory(path / ".myvc");
 }
 
+std::shared_ptr<RepositoryStore> RepositoryStore::getInstance() const {
+    return std::make_shared<RepositoryStore>(*this);
+}
+
 fs::path RepositoryStore::getMyvcPath() const {
     return path / ".myvc";
 }
@@ -35,7 +39,7 @@ RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {}
 template<typename T> T RepositoryStore::load(const fs::path &path) const {
     std::ifstream in {path, std::ios::binary};
     std::shared_ptr<RepositoryStore> copy;
-    return T {in, std::make_shared<RepositoryStore>(*this)};
+    return T {in, getInstance()};
 }
 
 void RepositoryStore::store(const fs::path &path, const Serializable &s) {
@@ -95,14 +99,45 @@ void RepositoryStore::updateIndex(const Index &i) {
     store(getIndexPath(), i);
 }
 
-Tree RepositoryStore::getWorkingTree() const {
+Tree RepositoryStore::getTreeAt(const fs::path &path) {
+    Tree t {{}, getInstance()};
+    auto nodes = t.getNodes();
+    for(const auto &entry : fs::directory_iterator(path)) {
+        if(entry.path().filename() == ".myvc") continue;
+        Tree::Node node;
+        if(entry.is_directory()) {
+            node.setTree(getTreeAt(entry.path()).getHash());
+        } else {
+            Blob b {{}, getInstance()};
+            auto vec = b.getData();
+            std::ifstream in {entry.path(), std::ios::binary};
+            while(in) {
+                char c;
+                in >> c;
+                vec.push_back(c);
+            }
+            createBlob(b);
+            node.setBlob(b.getHash());
+        }
+        nodes[entry.path().filename()] = node;
+    }
+    createTree(t);
+    return t;
+}
+
+Tree RepositoryStore::getWorkingTree() {
+    return getTreeAt(path);
+}
+
+void RepositoryStore::setTreeAt(const fs::path &path, const Tree &tree) {
     throw not_implemented {};
 }
 
 void RepositoryStore::setWorkingTree(const Tree &) {
+    // compute the diff, and then write the files as needed
     throw not_implemented {};
 }
 
-Hash RepositoryStore::resolvePartialHash(const std::string &) {
+Hash RepositoryStore::resolvePartialObjectHash(const std::string &) {
     throw not_implemented {};
 }
