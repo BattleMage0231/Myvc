@@ -9,7 +9,9 @@ class Object : public Stored {
 public:
     void reload() override {}
 
-    virtual Hash getHash() const = 0;
+    Hash getHash() const {
+        return Hash {*this};
+    }
 };
 
 }

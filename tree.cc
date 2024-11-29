@@ -88,10 +88,6 @@ void Tree::store() {
     prov->createTree(*this);
 }
 
-Hash Tree::getHash() const {
-    throw not_implemented {};
-}
-
 std::map<std::string, Tree::Node> &Tree::getNodes() {
     return nodes;
 }

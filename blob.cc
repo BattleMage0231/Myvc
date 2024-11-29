@@ -33,10 +33,6 @@ void Blob::store() {
     prov->createBlob(*this);
 }
 
-Hash Blob::getHash() const {
-    throw not_implemented {};
-}
-
 std::vector<char> &Blob::getData() {
     return data;
 }

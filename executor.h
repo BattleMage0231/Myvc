@@ -11,7 +11,7 @@
 using namespace myvc;
 
 enum class Subcommand {
-    None, Init, Status
+    None, Init, Status, TESTING
 };
 
 class CommandExecutor {
@@ -29,6 +29,7 @@ class CommandExecutor {
 
     void init();
     void status();
+    void testing();
 
 public:
     explicit CommandExecutor(fs::path, std::vector<std::string> args = {});

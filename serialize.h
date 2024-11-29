@@ -26,7 +26,7 @@ inline std::istream &operator>>(std::istream &in, Serializable &s) {
 }
 
 template<typename T> inline void write_raw(std::ostream &out, const T &v) {
-    const char *bytes = reinterpret_cast<const char *>(v);
+    const char *bytes = reinterpret_cast<const char *>(&v);
     out.write(bytes, sizeof(v));
 }
 

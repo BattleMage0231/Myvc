@@ -1,6 +1,8 @@
 #include <stdexcept>
 #include <memory>
 #include "executor.h"
+#include "hash.h"
+#include "serialize.h"
 
 using namespace myvc;
 
@@ -20,6 +22,8 @@ void CommandExecutor::parseSubcommand() {
         subcommand = Subcommand::Init;
     } else if(args[0] == "status") {
         subcommand = Subcommand::Status;
+    } else if(args[0] == "test") {
+        subcommand = Subcommand::TESTING;
     } else {
         subcommand = Subcommand::None;
     }
@@ -50,6 +54,9 @@ void CommandExecutor::printHelpMessage() const {
         case Subcommand::Status:
             std::cout << "usage: myvc status" << std::endl;
             break;
+        case Subcommand::TESTING:
+            std::cout << "Bad" << std::endl;
+            break;
     }
 }
 
@@ -70,6 +77,9 @@ void CommandExecutor::execute() {
     } else {
         store = std::make_shared<RepositoryStore>(path);
         if(subcommand == Subcommand::Status) status();
+        else if(subcommand == Subcommand::TESTING) {
+            testing();
+        }
     }
 }
 
@@ -79,4 +89,19 @@ void CommandExecutor::init() {
 
 void CommandExecutor::status() {
     std::cout << "status called" << std::endl;
+}
+
+struct StrWrapper : public Serializable {
+    std::string s;
+    StrWrapper(std::string s) : s {std::move(s)} {}
+    void write(std::ostream &out) const override {
+        out.write(s.data(), s.size());
+    }
+    void read(std::istream &in) override {}
+};
+
+void CommandExecutor::testing() {
+    //std::string str = nonFlagArgs.at(0);
+    Blob b {{'a'}};
+    std::cout << static_cast<std::string>(b.getHash()) << std::endl;
 }

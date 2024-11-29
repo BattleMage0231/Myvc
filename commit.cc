@@ -27,10 +27,6 @@ void Commit::store() {
     prov->createCommit(*this);
 }
 
-Hash Commit::getHash() const {
-    throw not_implemented {};
-}
-
 Commit Commit::getParent() const {
     return prov->getCommit(parentHash);
 }

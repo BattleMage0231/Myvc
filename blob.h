@@ -29,8 +29,6 @@ public:
     void read(std::istream &) override;
     void store() override;
 
-    Hash getHash() const override;
-
     std::vector<char> &getData();
     const std::vector<char> &getData() const;
     void setProvider(std::shared_ptr<Provider>);

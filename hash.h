@@ -5,17 +5,24 @@
 
 namespace myvc {
 
-struct Hash : public Serializable {
-    std::string s;
+class SHA1Hash : public Serializable {
+    char bytes[20];
 
-    auto operator<=>(const Hash &) const = default;
+public:
+    SHA1Hash();
 
-    bool operator==(const Hash &) const = default;
+    SHA1Hash(const Serializable &s);
+
+    auto operator<=>(const SHA1Hash &) const = default;
+
+    bool operator==(const SHA1Hash &) const = default;
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
 
     operator std::string() const;
 };
+
+using Hash = SHA1Hash;
 
 }

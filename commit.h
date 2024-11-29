@@ -35,8 +35,6 @@ public:
     void read(std::istream &) override;
     void store() override;
 
-    Hash getHash() const override;
-
     Commit getParent() const;
     void setParent(Hash);
     Tree getTree() const;
