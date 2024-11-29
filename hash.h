@@ -15,9 +15,7 @@ struct Hash : public Serializable {
     void write(std::ostream &) const override;
     void read(std::istream &) override;
 
-    operator std::string() const {
-        return s;
-    }
+    operator std::string() const;
 };
 
 }

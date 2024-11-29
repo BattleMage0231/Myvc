@@ -4,7 +4,7 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <ctime>
+#include <optional>
 #include <filesystem>
 #include "object.h"
 #include "hash.h"
@@ -41,7 +41,7 @@ public:
 
     void addFile(fs::path, Hash);
     void removeFile(const fs::path &);
-    Blob getFile(const fs::path &) const;
+    std::optional<Blob> getFile(const fs::path &) const;
     Tree applyChanges(const Tree &) const;
     void setProvider(std::shared_ptr<Provider>);
 };

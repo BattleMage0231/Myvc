@@ -1,44 +1,63 @@
 CXX = /usr/local/gcc-14.1.0/bin/g++-14.1.0 -std=c++20 -fmodules-ts -Wall -g
-CXXH = /usr/local/gcc-14.1.0/bin/g++-14.1.0 -std=c++20 -fmodules-ts -c -x c++-system-header
 
-myvc: myvc.o
-	$(CXX) -o myvc *.o
+myvc: myvc.o blob.o branch.o commit.o executor.o hash.o head.o index.o store.o tree.o
+	$(CXX) *.o -o myvc
 
-myvc.o: repository.o myvc.cc
-	$(CXX) -c myvc.cc
-
-repository.o: repository_store.o repository.cc
-	$(CXX) -c repository.cc
-
-repository_store.o: commit.o branch.o hash.o head.o tree.o blob.o repository_store.cc
-	$(CXX) -c repository_store.cc
-
-branch.o: hash.o writable.o branch.cc
-	$(CXX) -c branch.cc
-
-hash.o: hash.cc
-	$(CXX) -c hash.cc
-
-writable.o: writable.cc
-	$(CXX) -c writable.cc
-
-object.o: hash.o writable.o object.cc
-	$(CXX) -c object.cc
-
-commit.o: object.o hash.o commit.cc
-	$(CXX) -c commit.cc
-
-tree.o: object.o tree.cc
-	$(CXX) -c tree.cc
-
-head.o: hash.o writable.o branch.o commit.o head.cc
-	$(CXX) -c head.cc
-
-blob.o: hash.o object.o blob.cc
+blob.o: blob.cc blob.h serialize.h errors.h
 	$(CXX) -c blob.cc
 
-serialization.o: serialization.cc
-	$(CXX) -c serialization.cc
+branch.o: branch.cc branch.h serialize.h errors.h
+	$(CXX) -c branch.cc
+
+commit.o: commit.cc commit.h serialize.h errors.h
+	$(CXX) -c commit.cc
+
+executor.o: executor.cc executor.h
+	$(CXX) -c executor.cc
+
+hash.o: hash.cc hash.h serialize.h
+	$(CXX) -c hash.cc
+
+head.o: head.cc head.h
+	$(CXX) -c head.cc
+
+index.o: index.cc errors.h index.h
+	$(CXX) -c index.cc
+
+myvc.o: myvc.cc executor.h
+	$(CXX) -c myvc.cc
+
+store.o: store.cc store.h errors.h hash.h
+	$(CXX) -c store.cc
+
+tree.o: tree.cc tree.h serialize.h errors.h
+	$(CXX) -c tree.cc
+
+blob.h: object.h hash.h
+
+branch.h: stored.h hash.h commit.h
+
+commit.h: object.h hash.h tree.h
+
+errors.h:
+
+executor.h: store.h
+
+hash.h: serialize.h
+
+head.h: stored.h commit.h branch.h
+
+index.h: object.h hash.h tree.h blob.h
+
+object.h: stored.h hash.h
+
+serialize.h:
+
+store.h: object.h tree.h commit.h branch.h hash.h head.h blob.h index.h
+
+stored.h: serialize.h
+
+tree.h: object.h hash.h
 
 clean:
-	rm -r gcm.cache *.o myvc
+	rm -r *.o myvc

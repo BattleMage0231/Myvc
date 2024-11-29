@@ -64,5 +64,5 @@ void Commit::setMsg(std::string str) {
 }
 
 void Commit::setProvider(std::shared_ptr<Provider> prov) {
-    this->prov = prov;
+    this->prov = std::move(prov);
 }

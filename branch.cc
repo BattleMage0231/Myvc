@@ -49,6 +49,6 @@ Commit Branch::operator*() const {
     return getCommit();
 }
 
-void Branch::setProvider(std::shared_ptr<Provider> provider) {
-    this->prov = prov;
+void Branch::setProvider(std::shared_ptr<Provider> prov) {
+    this->prov = std::move(prov);
 }

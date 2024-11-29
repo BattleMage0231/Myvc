@@ -26,14 +26,15 @@ void CommandExecutor::parseSubcommand() {
 }
 
 void CommandExecutor::parseArgs() {
-    for(size_t i = 1; i < args.size(); ++i) {
+    for(size_t i = 1; i < args.size();) {
         if(flagRules.find(args[i]) != flagRules.end()) {
             size_t needed = flagRules[args[i++]];
             if(args.size() - i < needed) throw std::runtime_error {""};
-            flagArgs[args[i]] = std::vector<std::string> {args.begin() + i, args.begin() + i + needed};
-            i += needed;
+            for(; needed > 0; --needed, ++i) {
+                flagArgs[args[i]].emplace_back(args[i]);
+            }
         } else {
-            nonFlagArgs.push_back(args[i]);
+            nonFlagArgs.push_back(args[i++]);
         }
     }
 }

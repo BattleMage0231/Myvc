@@ -46,6 +46,6 @@ const std::vector<char> &Blob::getData() const {
 }
 
 void Blob::setProvider(std::shared_ptr<Provider> prov) {
-    this->prov = prov;
+    this->prov = std::move(prov);
 }
 

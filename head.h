@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <variant>
+#include <memory>
 #include "stored.h"
 #include "commit.h"
 #include "branch.h"
@@ -21,6 +22,7 @@ public:
 
 private:
     std::variant<std::string, Hash> state;
+    std::shared_ptr<Provider> prov;
 
 public:
     explicit Head(std::variant<std::string, Hash> state = {}, std::shared_ptr<Provider> prov = {});
@@ -31,9 +33,10 @@ public:
     void reload() override;
     void store() override;
 
+    bool isBranch() const;
+    std::optional<Branch> getBranch() const;
     Commit getCommit() const;
     Commit operator*() const;
-    std::optional<Branch> getBranch() const;
     void setState(std::variant<std::string, Hash>);
     void setProvider(std::shared_ptr<Provider>);
 };

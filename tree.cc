@@ -60,7 +60,7 @@ const std::map<std::string, Tree::Node> &Tree::getNodes() const {
 }
 
 void Tree::setProvider(std::shared_ptr<Provider> prov) {
-    this->prov = prov;
+    this->prov = std::move(prov);
 }
 
 Tree::Iterator Tree::begin() {
