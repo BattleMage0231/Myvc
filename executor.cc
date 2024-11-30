@@ -1,7 +1,9 @@
 #include <stdexcept>
 #include <memory>
+#include <fstream>
 #include "executor.h"
 #include "hash.h"
+#include "diff.h"
 #include "serialize.h"
 
 using namespace myvc;
@@ -22,6 +24,8 @@ void CommandExecutor::parseSubcommand() {
         subcommand = Subcommand::Init;
     } else if(args[0] == "status") {
         subcommand = Subcommand::Status;
+    } else if(args[0] == "diff") {
+        subcommand = Subcommand::Diff;
     } else if(args[0] == "test") {
         subcommand = Subcommand::TESTING;
     } else {
@@ -54,6 +58,9 @@ void CommandExecutor::printHelpMessage() const {
         case Subcommand::Status:
             std::cout << "usage: myvc status" << std::endl;
             break;
+        case Subcommand::Diff:
+            std::cout << "usage: myvc diff" << std::endl;
+            break;
         case Subcommand::TESTING:
             std::cout << "Bad" << std::endl;
             break;
@@ -77,6 +84,7 @@ void CommandExecutor::execute() {
     } else {
         store = std::make_shared<RepositoryStore>(path);
         if(subcommand == Subcommand::Status) status();
+        else if(subcommand == Subcommand::Diff) diff();
         else if(subcommand == Subcommand::TESTING) {
             testing();
         }
@@ -89,6 +97,33 @@ void CommandExecutor::init() {
 
 void CommandExecutor::status() {
     std::cout << "status called" << std::endl;
+}
+
+void CommandExecutor::diff() {
+    std::vector<std::string> vs[2];
+    for(int i = 0; i < 2; ++i) {
+        fs::path p {nonFlagArgs.at(i)};
+        std::ifstream in {p};
+        std::string l;
+        while(std::getline(in, l)) vs[i].emplace_back(l);
+    }
+    std::cout << vs[0].size() << " " << vs[1].size() << std::endl;
+    Diff d {vs[0], vs[1]};
+    const auto &x = d.getHunks();
+    if(x.size() == 0) std::cout << "No hunks" << std::endl;
+    for(const auto &hunk : x) {
+        std::cout << "Hunk from " << hunk.getIndex() << " to " << hunk.getEnd() << std::endl;
+        const auto &c = hunk.getChanges();
+        for(const auto &change : c) {
+            std::cout << "    " << ((change.type == Change::Type::Add) ? '+' : '-') << " " << change.content << std::endl;
+        }
+    }
+    std::cout << std::endl;
+    auto res = d.apply();
+    std::cout << "Reconstructed:" << std::endl;
+    for(const auto &s : res) {
+        std::cout << s << std::endl;
+    }
 }
 
 struct StrWrapper : public Serializable {

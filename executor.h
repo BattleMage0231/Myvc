@@ -11,7 +11,7 @@
 using namespace myvc;
 
 enum class Subcommand {
-    None, Init, Status, TESTING
+    None, Init, Status, Diff, TESTING
 };
 
 class CommandExecutor {
@@ -29,6 +29,7 @@ class CommandExecutor {
 
     void init();
     void status();
+    void diff();
     void testing();
 
 public:
