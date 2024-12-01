@@ -41,6 +41,16 @@ std::optional<Commit> Commit::getLCA(const Commit &a, const Commit &b) {
     return {};
 }
 
+std::vector<Commit> Commit::getAllParents(const Commit &c) {
+    std::vector<Commit> res;
+    for(const auto &parent : c.getParents()) {
+        res.emplace_back(parent);
+        auto nested = getAllParents(parent);
+        res.insert(res.end(), nested.begin(), nested.end());
+    }
+    return res;
+}
+
 Commit::Commit(std::set<Hash> parentHashes, Hash treeHash, time_t time, std::string msg, std::shared_ptr<Provider> prov)
     : parentHashes {std::move(parentHashes)}, treeHash {treeHash}, time {time}, msg {std::move(msg)}, prov {std::move(prov)} {}
 

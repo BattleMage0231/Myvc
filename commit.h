@@ -31,6 +31,7 @@ private:
 
 public:
     static std::optional<Commit> getLCA(const Commit &, const Commit &);
+    static std::vector<Commit> getAllParents(const Commit &);
 
     explicit Commit(std::set<Hash> parentHashes = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {}, std::shared_ptr<Provider> prov = {});
     explicit Commit(std::istream &, std::shared_ptr<Provider> prov = {});
