@@ -5,6 +5,7 @@
 #include <memory>
 #include "object.h"
 #include "hash.h"
+#include "diff.h"
 
 namespace myvc {
 
@@ -22,6 +23,8 @@ private:
     std::shared_ptr<Provider> prov;
 
 public:
+    static Diff diff(const Blob &, const Blob &);
+
     explicit Blob(std::vector<char> data = {}, std::shared_ptr<Provider> prov = {});
     explicit Blob(std::istream &, std::shared_ptr<Provider> prov = {});
 

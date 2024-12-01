@@ -1,12 +1,27 @@
+#include <sstream>
 #include "blob.h"
 #include "serialize.h"
 #include "errors.h"
 
 using namespace myvc;
 
+std::vector<std::string> getLines(const std::vector<char> &data) {
+    std::stringstream ss {{ data.begin(), data.end() }};
+    std::vector<std::string> res;
+    std::string line;
+    while(std::getline(ss, line)) {
+        res.emplace_back(line);
+    }
+    return res;
+}
+
+Diff Blob::diff(const Blob &a, const Blob &b) {
+    auto aLines = getLines(a.getData()), bLines = getLines(b.getData());
+    return Diff {aLines, bLines};
+}
+
 Blob::Blob(std::vector<char> data, std::shared_ptr<Provider> prov) 
     : data {std::move(data)}, prov {std::move(prov)} {}
-
 
 Blob::Blob(std::istream &in, std::shared_ptr<Provider> prov) : prov {std::move(prov)} {
     read(in);
