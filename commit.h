@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <ctime>
+#include <optional>
 #include "object.h"
 #include "hash.h"
 #include "tree.h"
@@ -22,21 +23,25 @@ public:
     };
 
 private:
-    Hash parentHash, treeHash;
+    std::set<Hash> parentHashes;
+    Hash treeHash;
     time_t time;
     std::string msg;
     std::shared_ptr<Provider> prov;
 
 public:
-    explicit Commit(Hash parentHash = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {}, std::shared_ptr<Provider> prov = {});
+    static std::optional<Commit> getLCA(const Commit &, const Commit &);
+
+    explicit Commit(std::set<Hash> parentHashes = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {}, std::shared_ptr<Provider> prov = {});
     explicit Commit(std::istream &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
     void store() override;
 
-    Commit getParent() const;
-    void setParent(Hash);
+    std::vector<Commit> getParents() const;
+    std::set<Hash> &getParentHashes();
+    const std::set<Hash> &getParentHashes() const;
     Tree getTree() const;
     void setTree(Hash);
     time_t getTime() const;

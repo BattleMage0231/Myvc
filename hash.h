@@ -1,5 +1,6 @@
 #pragma once
 
+#include <compare>
 #include <string>
 #include "serialize.h"
 
@@ -11,11 +12,11 @@ class SHA1Hash : public Serializable {
 public:
     SHA1Hash();
 
-    SHA1Hash(const Serializable &s);
+    SHA1Hash(const Serializable &);
 
-    auto operator<=>(const SHA1Hash &) const = default;
+    std::strong_ordering operator<=>(const SHA1Hash &other) const;
 
-    bool operator==(const SHA1Hash &) const = default;
+    bool operator==(const SHA1Hash &) const;
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
