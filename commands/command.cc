@@ -7,14 +7,16 @@ Command::Command(fs::path path, std::vector<std::string> rawArgs, bool useStore)
 
 void Command::parseArgs() {
     for(size_t i = 0; i < rawArgs.size();) {
-        if(flagRules.find(rawArgs[i]) != flagRules.end()) {
-            size_t needed = flagRules[rawArgs[i++]];
+        std::string cur = rawArgs[i++];
+        if(flagRules.find(cur) != flagRules.end()) {
+            size_t needed = flagRules[cur];
+            flagArgs[cur];
             if(rawArgs.size() - i < needed) throw std::runtime_error {""};
             for(; needed > 0; --needed, ++i) {
-                flagArgs[rawArgs[i]].emplace_back(rawArgs[i]);
+                flagArgs[cur].emplace_back(rawArgs[i]);
             }
         } else {
-            args.push_back(rawArgs[i++]);
+            args.push_back(cur);
         }
     }
 }
