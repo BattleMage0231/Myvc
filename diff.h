@@ -45,6 +45,7 @@ public:
 
     std::vector<std::string> apply() const;
 
+    const std::vector<std::string> &getBase() const;
     const std::vector<Hunk> &getHunks() const;
 };
 

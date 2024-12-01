@@ -87,7 +87,37 @@ std::vector<std::string> Hunk::getTheirs() const {
 }
 
 Diff Diff::merge(const Diff &a, const Diff &b) {
-    throw not_implemented {};
+    auto aHunks = a.getHunks(), bHunks = b.getHunks();
+    auto aIt = aHunks.begin(), bIt = bHunks.begin();
+    std::vector<Hunk> hunks;
+    while(aIt < aHunks.end() && bIt < bHunks.end()) {
+        if(*aIt == *bIt) {
+            hunks.emplace_back(*aIt);
+            ++aIt; ++bIt;
+        } else {
+            size_t as = aIt->getIndex(), ae = aIt->getEnd();
+            size_t bs = bIt->getIndex(), be = bIt->getEnd();
+            if((as <= bs && bs <= ae) || (bs <= as && as <= be)) {
+                if(aIt->getChanges().size() == 0) {
+                    hunks.emplace_back(*bIt);
+                } else if(bIt->getChanges().size() == 0) {
+                    hunks.emplace_back(*aIt);
+                } else {
+                    throw not_implemented {};
+                }
+                ++aIt; ++bIt;
+            } else if(as <= bs) {
+                hunks.emplace_back(*aIt);
+                ++aIt;
+            } else {
+                hunks.emplace_back(*bIt);
+                ++bIt;
+            }
+        }
+    }
+    hunks.insert(hunks.end(), aIt, aHunks.end());
+    hunks.insert(hunks.end(), bIt, bHunks.end());
+    return Diff {a.getBase(), std::move(hunks)};
 }
 
 Diff::Diff(std::vector<std::string> base, const std::vector<std::string> &other) 
@@ -105,6 +135,10 @@ std::vector<std::string> Diff::apply() const {
         res.insert(res.end(), hunkRes.begin(), hunkRes.end());
     }
     return res;
+}
+
+const std::vector<std::string> &Diff::getBase() const {
+    return base;
 }
 
 const std::vector<Hunk> &Diff::getHunks() const {
