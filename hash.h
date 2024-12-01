@@ -14,6 +14,8 @@ public:
 
     SHA1Hash(const Serializable &);
 
+    SHA1Hash(const std::vector<char> &);
+
     std::strong_ordering operator<=>(const SHA1Hash &other) const;
 
     bool operator==(const SHA1Hash &) const;

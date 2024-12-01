@@ -109,6 +109,11 @@ SHA1Hash::SHA1Hash(const Serializable &s) {
     for(size_t i = 0; i < 20; ++i) bytes[i] = hashed[i];
 }
 
+SHA1Hash::SHA1Hash(const std::vector<char> &b) {
+    assert(b.size() == 20);
+    for(size_t i = 0; i < 20; ++i) bytes[i] = b[i];
+}
+
 std::strong_ordering SHA1Hash::operator<=>(const SHA1Hash &other) const {
     for(size_t i = 0; i < 20; ++i) {
         if(bytes[i] != other.bytes[i]) return bytes[i] <=> other.bytes[i];

@@ -16,9 +16,9 @@ class Commit : public Object {
 public:
     class Provider {
     public:
-        virtual Commit getCommit(Hash) const = 0;
+        virtual std::optional<Commit> getCommit(Hash) const = 0;
         virtual void createCommit(const Commit &) = 0;
-        virtual Tree getTree(Hash) const = 0;
+        virtual std::optional<Tree> getTree(Hash) const = 0;
         virtual ~Provider() {};
     };
 
@@ -31,7 +31,7 @@ private:
 
 public:
     static std::optional<Commit> getLCA(const Commit &, const Commit &);
-    static std::vector<Commit> getAllParents(const Commit &);
+    static std::vector<Commit> getAllReachable(const Commit &);
 
     explicit Commit(std::set<Hash> parentHashes = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {}, std::shared_ptr<Provider> prov = {});
     explicit Commit(std::istream &, std::shared_ptr<Provider> prov = {});

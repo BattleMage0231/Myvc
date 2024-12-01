@@ -41,11 +41,10 @@ std::optional<Commit> Commit::getLCA(const Commit &a, const Commit &b) {
     return {};
 }
 
-std::vector<Commit> Commit::getAllParents(const Commit &c) {
-    std::vector<Commit> res;
+std::vector<Commit> Commit::getAllReachable(const Commit &c) {
+    std::vector<Commit> res {c};
     for(const auto &parent : c.getParents()) {
-        res.emplace_back(parent);
-        auto nested = getAllParents(parent);
+        auto nested = getAllReachable(parent);
         res.insert(res.end(), nested.begin(), nested.end());
     }
     return res;
@@ -86,7 +85,7 @@ void Commit::store() {
 
 std::vector<Commit> Commit::getParents() const {
     std::vector<Commit> commits;
-    for(const auto &h : parentHashes) commits.emplace_back(prov->getCommit(h));
+    for(const auto &h : parentHashes) commits.emplace_back(prov->getCommit(h).value());
     return commits;
 }
 
@@ -99,7 +98,7 @@ const std::set<Hash> &Commit::getParentHashes() const {
 }
 
 Tree Commit::getTree() const {
-    return prov->getTree(treeHash);
+    return prov->getTree(treeHash).value();
 }
 
 void Commit::setTree(Hash hash) {

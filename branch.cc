@@ -22,7 +22,7 @@ void Branch::read(std::istream &in) {
 }
 
 void Branch::reload() {
-    *this = prov->getBranch(name);
+    *this = prov->getBranch(name).value();
 }
 
 void Branch::store() {
@@ -38,7 +38,7 @@ void Branch::setName(std::string name) {
 }
 
 Commit Branch::getCommit() const {
-    return prov->getCommit(commitHash);
+    return prov->getCommit(commitHash).value();
 }
 
 void Branch::setCommit(Hash hash) {

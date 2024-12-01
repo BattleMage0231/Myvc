@@ -3,6 +3,7 @@
 #include <iostream>
 #include "commands/command.h"
 #include "commands/init.h"
+#include "commands/log.h"
 
 using namespace myvc::commands;
 
@@ -13,6 +14,8 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
     args.erase(args.begin());
     if(subcmd == "init") {
         return std::make_unique<Init>(cur, args);
+    } else if(subcmd == "log") {
+        return std::make_unique<Log>(cur, args);
     } else {
         return {};
     }

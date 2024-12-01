@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>
 #include <variant>
+#include <optional>
 #include "object.h"
 #include "hash.h"
 #include "blob.h"
@@ -16,8 +17,8 @@ class Tree : public Object {
 public:
     class Provider {
     public:
-        virtual Blob getBlob(Hash) const = 0;
-        virtual Tree getTree(Hash) const = 0;
+        virtual std::optional<Blob> getBlob(Hash) const = 0;
+        virtual std::optional<Tree> getTree(Hash) const = 0;
         virtual void createTree(const Tree &) = 0;
         virtual ~Provider() {};
     };

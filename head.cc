@@ -34,7 +34,7 @@ void Head::read(std::istream &in) {
 }
 
 void Head::reload() {
-    *this = prov->getHead();
+    *this = prov->getHead().value();
 }
 
 void Head::store() {
@@ -47,7 +47,7 @@ bool Head::isBranch() const {
 
 std::optional<Branch> Head::getBranch() const {
     if(isBranch()) {
-        return prov->getBranch(std::get<std::string>(state));
+        return prov->getBranch(std::get<std::string>(state)).value();
     } else {
         return {};
     }
@@ -58,7 +58,7 @@ Commit Head::getCommit() const {
     if(branch) {
         return *(branch.value());
     } else {
-        return prov->getCommit(std::get<Hash>(state));
+        return prov->getCommit(std::get<Hash>(state)).value();
     }
 }
 

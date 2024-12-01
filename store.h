@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <optional>
 #include "object.h"
 #include "tree.h"
 #include "commit.h"
@@ -32,35 +33,35 @@ class RepositoryStore :
 
     std::shared_ptr<RepositoryStore> getInstance() const;
 
-    template<typename T> T load(const fs::path &) const;
+    template<typename T> std::optional<T> load(const fs::path &) const;
     void store(const fs::path &, const Serializable &); 
 
-    Tree getTreeAt(const fs::path &);
+    std::optional<Tree> getTreeAt(const fs::path &);
     void setTreeAt(const fs::path &, const Tree &);
 
 public:
     explicit RepositoryStore(fs::path);
 
-    Commit getCommit(Hash) const override;
+    std::optional<Commit> getCommit(Hash) const override;
     void createCommit(const Commit &) override;
-    Tree getTree(Hash) const override;
+    std::optional<Tree> getTree(Hash) const override;
     void createTree(const Tree &) override;
-    Blob getBlob(Hash) const override;
+    std::optional<Blob> getBlob(Hash) const override;
     void createBlob(const Blob &) override;
 
-    Branch getBranch(const std::string &) const override;
+    std::optional<Branch> getBranch(const std::string &) const override;
     void deleteBranch(const std::string &);
     void updateBranch(const Branch &) override;
 
-    Head getHead() const override;
+    std::optional<Head> getHead() const override;
     void updateHead(const Head &) override;
-    Index getIndex() const override;
+    std::optional<Index> getIndex() const override;
     void updateIndex(const Index &) override;
 
-    Tree getWorkingTree();
+    std::optional<Tree> getWorkingTree();
     void setWorkingTree(const Tree &);
 
-    Hash resolvePartialObjectHash(const std::string &);
+    std::optional<Hash> resolvePartialObjectHash(const std::string &);
 
     static void createAt(const fs::path &);
 };

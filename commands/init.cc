@@ -10,8 +10,6 @@ void Init::printHelpMessage() {
     std::cerr << "usage: myvc init" << std::endl;
 }
 
-void Init::createRules() {}
-
 void Init::process() {
     if(fs::exists(path / ".myvc")) {
         throw command_error {"repository already exists"};

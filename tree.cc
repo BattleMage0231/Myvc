@@ -27,8 +27,8 @@ bool Tree::Node::isBlob() const {
 
 std::variant<Tree, Blob> Tree::Node::getData() const {
     auto p = prov.lock();
-    if(isBlob()) return p->getBlob(dataHash);
-    else return p->getTree(dataHash);
+    if(isBlob()) return p->getBlob(dataHash).value();
+    else return p->getTree(dataHash).value();
 }
 
 std::variant<Tree, Blob> Tree::Node::operator*() const {

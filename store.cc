@@ -34,20 +34,25 @@ fs::path RepositoryStore::getIndexPath() const {
     return getMyvcPath() / "index";
 }
 
-RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {}
+RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {
+    if(!fs::exists(getMyvcPath())) {
+        throw not_found {".myvc directory"};
+    }
+}
 
-template<typename T> T RepositoryStore::load(const fs::path &path) const {
+template<typename T> std::optional<T> RepositoryStore::load(const fs::path &path) const {
     std::ifstream in {path, std::ios::binary};
-    std::shared_ptr<RepositoryStore> copy;
+    if(!in) return {};
     return T {in, getInstance()};
 }
 
 void RepositoryStore::store(const fs::path &path, const Serializable &s) {
+    fs::create_directories(path.parent_path());
     std::ofstream out {path, std::ios::binary};
     s.write(out);
 }
 
-Commit RepositoryStore::getCommit(Hash h) const {
+std::optional<Commit> RepositoryStore::getCommit(Hash h) const {
     return load<Commit>(getObjectPath(h));
 }
 
@@ -55,7 +60,7 @@ void RepositoryStore::createCommit(const Commit &c) {
     store(getObjectPath(c.getHash()), c);
 }
 
-Tree RepositoryStore::getTree(Hash h) const {
+std::optional<Tree> RepositoryStore::getTree(Hash h) const {
     return load<Tree>(getObjectPath(h));
 }
 
@@ -63,7 +68,7 @@ void RepositoryStore::createTree(const Tree &c) {
     store(getObjectPath(c.getHash()), c);
 }
 
-Blob RepositoryStore::getBlob(Hash h) const {
+std::optional<Blob> RepositoryStore::getBlob(Hash h) const {
     return load<Blob>(getObjectPath(h));
 }
 
@@ -71,7 +76,7 @@ void RepositoryStore::createBlob(const Blob &c) {
     store(getObjectPath(c.getHash()), c);
 }
 
-Branch RepositoryStore::getBranch(const std::string &name) const {
+std::optional<Branch> RepositoryStore::getBranch(const std::string &name) const {
     return load<Branch>(getBranchPath(name));
 }
 
@@ -83,7 +88,7 @@ void RepositoryStore::updateBranch(const Branch &branch) {
     store(getBranchPath(branch.getName()), branch);
 }
 
-Head RepositoryStore::getHead() const {
+std::optional<Head> RepositoryStore::getHead() const {
     return load<Head>(getHeadPath());
 }
 
@@ -91,7 +96,7 @@ void RepositoryStore::updateHead(const Head &h) {
     store(getHeadPath(), h);
 }
 
-Index RepositoryStore::getIndex() const {
+std::optional<Index> RepositoryStore::getIndex() const {
     return load<Index>(getHeadPath());
 }
 
@@ -99,14 +104,13 @@ void RepositoryStore::updateIndex(const Index &i) {
     store(getIndexPath(), i);
 }
 
-Tree RepositoryStore::getTreeAt(const fs::path &path) {
-    Tree t {{}, getInstance()};
-    auto nodes = t.getNodes();
+std::optional<Tree> RepositoryStore::getTreeAt(const fs::path &path) {
+    std::map<std::string, Tree::Node> nodes;
     for(const auto &entry : fs::directory_iterator(path)) {
         if(entry.path().filename() == ".myvc") continue;
-        Tree::Node node;
         if(entry.is_directory()) {
-            node.setTree(getTreeAt(entry.path()).getHash());
+            auto child = getTreeAt(entry.path());
+            if(child) nodes[entry.path().filename()] = Tree::Node {(*child).getHash(), false};
         } else {
             Blob b {{}, getInstance()};
             auto vec = b.getData();
@@ -117,15 +121,16 @@ Tree RepositoryStore::getTreeAt(const fs::path &path) {
                 vec.push_back(c);
             }
             createBlob(b);
-            node.setBlob(b.getHash());
+            nodes[entry.path().filename()] = Tree::Node {b.getHash(), true};
         }
-        nodes[entry.path().filename()] = node;
     }
+    if(nodes.empty()) return {};
+    Tree t {nodes, getInstance()};
     createTree(t);
     return t;
 }
 
-Tree RepositoryStore::getWorkingTree() {
+std::optional<Tree> RepositoryStore::getWorkingTree() {
     return getTreeAt(path);
 }
 
@@ -138,6 +143,6 @@ void RepositoryStore::setWorkingTree(const Tree &) {
     throw not_implemented {};
 }
 
-Hash RepositoryStore::resolvePartialObjectHash(const std::string &) {
+std::optional<Hash> RepositoryStore::resolvePartialObjectHash(const std::string &) {
     throw not_implemented {};
 }

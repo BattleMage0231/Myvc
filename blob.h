@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <optional>
 #include "object.h"
 #include "hash.h"
 #include "diff.h"
@@ -13,7 +14,6 @@ class Blob : public Object {
 public:
     class Provider {
     public:
-        virtual Blob getBlob(Hash) const = 0;
         virtual void createBlob(const Blob &) = 0;
         virtual ~Provider() {};
     };

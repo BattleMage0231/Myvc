@@ -19,9 +19,9 @@ class Index : public Stored {
 public:
     class Provider {
     public:
-        virtual Index getIndex() const = 0;
+        virtual std::optional<Index> getIndex() const = 0;
         virtual void updateIndex(const Index &) = 0;
-        virtual Blob getBlob(Hash) const = 0;
+        virtual std::optional<Blob> getBlob(Hash) const = 0;
         virtual void createBlob(const Blob &) = 0;
         virtual ~Provider() {};
     };

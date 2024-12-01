@@ -13,10 +13,10 @@ class Head : public Stored {
 public:
     class Provider {
     public:
-        virtual Head getHead() const = 0;
+        virtual std::optional<Head> getHead() const = 0;
         virtual void updateHead(const Head &) = 0;
-        virtual Commit getCommit(Hash) const = 0;
-        virtual Branch getBranch(const std::string &) const = 0;
+        virtual std::optional<Commit> getCommit(Hash) const = 0;
+        virtual std::optional<Branch> getBranch(const std::string &) const = 0;
         virtual ~Provider() {};
     };
 

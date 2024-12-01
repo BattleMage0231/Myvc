@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include "../store.h"
+#include "../commit.h"
 
 namespace myvc::commands {
 
@@ -38,8 +39,12 @@ protected:
     Command(fs::path, std::vector<std::string>, bool useStore = true);
 
     virtual void printHelpMessage() = 0;
-    virtual void createRules() = 0;
+    virtual void createRules() {};
     virtual void process() = 0;
+
+    size_t resolveNumber(const std::string &) const;
+    Commit resolveSymbol(const std::string &) const;
+    Head resolveHead() const;
 
 public:
     void execute();

@@ -31,7 +31,7 @@ void Index::read(std::istream &in) {
 }
 
 void Index::reload() {
-    *this = prov->getIndex();
+    *this = prov->getIndex().value();
 }
 
 void Index::store() {
@@ -48,7 +48,7 @@ void Index::removeFile(const fs::path &path) {
 
 std::optional<Blob> Index::getFile(const fs::path &path) const {
     if(blobs.find(path) == blobs.end()) return {};
-    else return prov->getBlob(blobs.at(path));
+    else return prov->getBlob(blobs.at(path)).value();
 }
 
 Tree Index::applyChanges(const Tree &tree) const {

@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <ctime>
+#include <optional>
 #include "stored.h"
 #include "hash.h"
 #include "commit.h"
@@ -15,9 +16,9 @@ class Branch : public Stored {
 public:
     class Provider {
     public:
-        virtual Branch getBranch(const std::string &) const = 0;
+        virtual std::optional<Branch> getBranch(const std::string &) const = 0;
         virtual void updateBranch(const Branch &) = 0;
-        virtual Commit getCommit(Hash) const = 0;
+        virtual std::optional<Commit> getCommit(Hash) const = 0;
         virtual ~Provider() {};
     };
 
