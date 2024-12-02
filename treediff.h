@@ -26,6 +26,7 @@ public:
 
     TreeDiff(const std::map<fs::path, Blob> &, const std::map<fs::path, Blob> &);
 
+    std::map<fs::path, TreeChange> &getChanges();
     const std::map<fs::path, TreeChange> &getChanges() const;
 };
 

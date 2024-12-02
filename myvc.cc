@@ -1,9 +1,11 @@
 #include <filesystem>
 #include <memory>
 #include <iostream>
+#include <stdexcept>
 #include "commands/command.h"
 #include "commands/init.h"
 #include "commands/log.h"
+#include "commands/add.h"
 
 using namespace myvc::commands;
 
@@ -16,6 +18,8 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return std::make_unique<Init>(cur, args);
     } else if(subcmd == "log") {
         return std::make_unique<Log>(cur, args);
+    } else if(subcmd == "add") {
+        return std::make_unique<Add>(cur, args);
     } else {
         return {};
     }
@@ -29,6 +33,9 @@ int main(int argc, char *argv[]) {
             cmd->execute();
         } catch(command_error &e) {
             std::cerr << "error: ";
+            std::cerr << std::string {e.what()} << std::endl;
+        } catch(std::exception &e) {
+            std::cerr << "internal myvc error: ";
             std::cerr << std::string {e.what()} << std::endl;
         }
     } else {

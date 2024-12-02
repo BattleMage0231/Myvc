@@ -58,6 +58,7 @@ void Add::process() {
                     index.updateEntry(path, std::get<Blob>(res1.value()));
                 }
             }
+            indexTree.reload();
         }
         index.store();
     }

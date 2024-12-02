@@ -129,6 +129,35 @@ void Tree::setProvider(std::shared_ptr<Provider> prov) {
     this->prov = std::move(prov);
 }
 
+void Tree::updateEntry(const fs::path &path, Node node) {
+    std::string base = path.root_name().string();
+    fs::path tail = path.relative_path();
+    if(nodes.find(base) == nodes.end()) return;
+    if(tail.empty()) {
+        node.setProvider(prov);
+        nodes.insert_or_assign(base, std::move(node));
+    } else {
+        Tree t = std::get<Tree>(nodes[base].getData());
+        t.updateEntry(tail, std::move(node));
+        nodes[base].setTree(t.getHash());
+    }
+    store();
+}
+
+void Tree::deleteEntry(const fs::path &path) {
+    std::string base = path.root_name().string();
+    fs::path tail = path.relative_path();
+    if(nodes.find(base) == nodes.end()) return;
+    if(tail.empty()) {
+        nodes.erase(path);
+    } else {
+        Tree t = std::get<Tree>(nodes[base].getData());
+        t.deleteEntry(tail);
+        nodes[base].setTree(t.getHash());
+    }
+    store();
+}
+
 Tree::Iterator Tree::begin() const {
     return nodes.begin();
 }

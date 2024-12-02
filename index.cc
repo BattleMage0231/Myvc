@@ -1,5 +1,6 @@
 #include "errors.h"
 #include "index.h"
+#include "treediff.h"
 
 using namespace myvc;
 
@@ -27,19 +28,40 @@ void Index::store() {
 }
 
 void Index::updateEntry(const fs::path &path, const Tree &tree) {
-    throw not_implemented {};
+    Tree cur = getTree();
+    cur.updateEntry(path, Tree::Node { tree.getHash(), false });
+    treeHash = cur.getHash();
+    store();
 }
 
 void Index::updateEntry(const fs::path &path, const Blob &blob) {
-    throw not_implemented {};
+    Tree cur = getTree();
+    cur.updateEntry(path, Tree::Node { blob.getHash(), true });
+    treeHash = cur.getHash();
+    store();
 }
 
 void Index::deleteEntry(const fs::path &path) {
-    throw not_implemented {};
+    Tree tree = getTree();
+    tree.deleteEntry(path);
+    treeHash = tree.getHash();
+    store();
+}
+
+void Index::reset(Hash newBase) {
+    baseHash = newBase;
+    treeHash = newBase;
+    store();
 }
 
 void Index::updateBase(Hash newBase) {
-    throw not_implemented {};
+    Tree newBaseTree = prov->getTree(newBase).value();
+    TreeDiff diff {getTree().getAllFiles(), prov->getTree(baseHash).value().getAllFiles()};
+    if(!diff.getChanges().empty()) {
+        throw not_implemented {};
+    }
+    baseHash = newBaseTree.getHash();
+    store();
 }
 
 Tree Index::getTree() const {

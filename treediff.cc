@@ -38,6 +38,10 @@ TreeDiff::TreeDiff(const std::map<fs::path, Blob> &base, const std::map<fs::path
     }
 }
 
+std::map<fs::path, TreeChange> &TreeDiff::getChanges() {
+    return changes;
+}
+
 const std::map<fs::path, TreeChange> &TreeDiff::getChanges() const {
     return changes;
 }
