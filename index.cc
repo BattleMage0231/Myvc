@@ -56,7 +56,7 @@ void Index::reset(Hash newBase) {
 
 void Index::updateBase(Hash newBase) {
     Tree newBaseTree = prov->getTree(newBase).value();
-    TreeDiff diff {getTree().getAllFiles(), prov->getTree(baseHash).value().getAllFiles()};
+    TreeDiff diff = getDiff();
     if(!diff.getChanges().empty()) {
         throw not_implemented {};
     }
@@ -66,6 +66,10 @@ void Index::updateBase(Hash newBase) {
 
 Tree Index::getTree() const {
     return prov->getTree(treeHash).value();
+}
+
+TreeDiff Index::getDiff() const {
+    return TreeDiff {getTree().getAllFiles(), prov->getTree(baseHash).value().getAllFiles()};
 }
 
 void Index::setProvider(std::shared_ptr<Provider> prov) {

@@ -10,6 +10,7 @@
 #include "hash.h"
 #include "tree.h"
 #include "blob.h"
+#include "treediff.h"
 
 namespace myvc {
 
@@ -47,6 +48,7 @@ public:
     void reset(Hash);
     void updateBase(Hash);
     Tree getTree() const;
+    TreeDiff getDiff() const;
     void setProvider(std::shared_ptr<Provider>);
 };
 
