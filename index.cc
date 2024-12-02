@@ -26,11 +26,15 @@ void Index::store() {
     prov->updateIndex(*this);
 }
 
-void Index::updateFile(const fs::path &path, Hash h) {
+void Index::updateEntry(const fs::path &path, const Tree &tree) {
     throw not_implemented {};
 }
 
-void Index::deleteFile(const fs::path &path) {
+void Index::updateEntry(const fs::path &path, const Blob &blob) {
+    throw not_implemented {};
+}
+
+void Index::deleteEntry(const fs::path &path) {
     throw not_implemented {};
 }
 

@@ -41,8 +41,9 @@ public:
     void reload() override;
     void store() override;
 
-    void updateFile(const fs::path &, Hash);
-    void deleteFile(const fs::path &);
+    void updateEntry(const fs::path &, const Tree &);
+    void updateEntry(const fs::path &, const Blob &);
+    void deleteEntry(const fs::path &);
     void updateBase(Hash);
     Tree getTree() const;
     void setProvider(std::shared_ptr<Provider>);

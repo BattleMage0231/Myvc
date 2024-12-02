@@ -98,16 +98,16 @@ Index Command::resolveIndex() {
     }
 }
 
-fs::path Command::resolvePath(const std::string &p) const {
+fs::path Command::resolvePath(const std::string &p, bool mustExist) const {
     fs::path res;
     try {
         res = fs::path {p};
     } catch(...) {
         throw command_error {"malformed path " + p};
     }
-    ensureExists(res);
+    if(mustExist) ensureExists(res);
     ensureWithinRepo(res);
-    return fs::canonical(res);
+    return fs::weakly_canonical(res);
 }
 
 fs::path Command::getRelative(const fs::path &abs) const {

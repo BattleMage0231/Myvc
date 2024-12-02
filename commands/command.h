@@ -46,7 +46,7 @@ protected:
     Commit resolveSymbol(const std::string &) const;
     Head resolveHead() const;
     Index resolveIndex();
-    fs::path resolvePath(const std::string &) const;
+    fs::path resolvePath(const std::string &, bool) const;
     fs::path getRelative(const fs::path &) const;
 
     void ensureIsFile(const fs::path &) const;
