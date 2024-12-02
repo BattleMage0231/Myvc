@@ -60,6 +60,5 @@ void Add::process() {
             }
             indexTree.reload();
         }
-        index.store();
     }
 }
