@@ -90,7 +90,7 @@ Index Command::resolveIndex() {
     auto index = store->getIndex();
     if(index) return *index;
     else {
-        Tree t;
+        Tree t {{}, store};
         t.store();
         Index index {t.getHash(), t.getHash(), store};
         index.store();

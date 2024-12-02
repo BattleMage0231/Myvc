@@ -6,3 +6,4 @@ gcm.cache/
 tests/
 commands/*.o
 commands/*.d
+.myvc/
