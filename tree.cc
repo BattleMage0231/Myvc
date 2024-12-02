@@ -96,6 +96,22 @@ const std::map<std::string, Tree::Node> &Tree::getNodes() const {
     return nodes;
 }
 
+std::map<fs::path, Blob> Tree::getAllFiles() const {
+    std::map<fs::path, Blob> files;
+    for(const auto &[k, node] : nodes) {
+        fs::path base = fs::path {k};
+        if(node.isBlob()) {
+            files.insert_or_assign(base, std::get<Blob>(node.getData()));
+        } else {
+            std::map<fs::path, Blob> children = std::get<Tree>(node.getData()).getAllFiles();
+            for(const auto &[p, blob] : children) {
+                files.insert_or_assign(base / p, blob);
+            }
+        }
+    }
+    return files;
+}
+
 std::optional<std::variant<Tree, Blob>> Tree::getAtPath(const fs::path &path) const {
     std::string base = path.root_name().string();
     fs::path tail = path.relative_path();

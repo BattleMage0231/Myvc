@@ -39,7 +39,7 @@ void Index::updateBase(Hash newBase) {
 }
 
 Tree Index::getTree() const {
-    throw not_implemented {};
+    return prov->getTree(treeHash).value();
 }
 
 void Index::setProvider(std::shared_ptr<Provider> prov) {

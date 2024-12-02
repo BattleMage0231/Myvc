@@ -13,7 +13,7 @@ public:
         return Hash {*this};
     }
 
-    bool operator==(const Object &other) {
+    bool operator==(const Object &other) const {
         return getHash() == other.getHash();
     }
 };

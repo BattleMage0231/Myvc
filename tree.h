@@ -7,6 +7,7 @@
 #include <utility>
 #include <variant>
 #include <optional>
+#include <vector>
 #include <filesystem>
 #include "object.h"
 #include "hash.h"
@@ -63,6 +64,7 @@ public:
 
     std::map<std::string, Node> &getNodes();
     const std::map<std::string, Node> &getNodes() const;
+    std::map<fs::path, Blob> getAllFiles() const;
     std::optional<std::variant<Tree, Blob>> getAtPath(const fs::path &) const;
     void setProvider(std::shared_ptr<Provider>);
 
