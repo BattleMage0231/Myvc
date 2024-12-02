@@ -12,6 +12,10 @@ public:
     Hash getHash() const {
         return Hash {*this};
     }
+
+    bool operator==(const Object &other) {
+        return getHash() == other.getHash();
+    }
 };
 
 }

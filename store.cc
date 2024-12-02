@@ -6,8 +6,10 @@
 
 using namespace myvc;
 
-void RepositoryStore::createAt(const fs::path &path) {
+bool RepositoryStore::createAt(const fs::path &path) {
+    if(fs::exists(path / ".myvc")) return false;
     fs::create_directory(path / ".myvc");
+    return true;
 }
 
 std::shared_ptr<RepositoryStore> RepositoryStore::getInstance() const {
@@ -104,13 +106,13 @@ void RepositoryStore::updateIndex(const Index &i) {
     store(getIndexPath(), i);
 }
 
-std::optional<Tree> RepositoryStore::getTreeAt(const fs::path &path) {
+Tree RepositoryStore::getTreeAt(const fs::path &path) {
     std::map<std::string, Tree::Node> nodes;
     for(const auto &entry : fs::directory_iterator(path)) {
         if(entry.path().filename() == ".myvc") continue;
         if(entry.is_directory()) {
-            auto child = getTreeAt(entry.path());
-            if(child) nodes[entry.path().filename()] = Tree::Node {(*child).getHash(), false};
+            Tree child = getTreeAt(entry.path());
+            if(!child.getNodes().empty()) nodes[entry.path().filename()] = Tree::Node {child.getHash(), false};
         } else {
             Blob b {{}, getInstance()};
             auto vec = b.getData();
@@ -124,13 +126,12 @@ std::optional<Tree> RepositoryStore::getTreeAt(const fs::path &path) {
             nodes[entry.path().filename()] = Tree::Node {b.getHash(), true};
         }
     }
-    if(nodes.empty()) return {};
     Tree t {nodes, getInstance()};
     createTree(t);
     return t;
 }
 
-std::optional<Tree> RepositoryStore::getWorkingTree() {
+Tree RepositoryStore::getWorkingTree() {
     return getTreeAt(path);
 }
 

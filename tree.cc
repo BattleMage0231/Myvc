@@ -96,6 +96,19 @@ const std::map<std::string, Tree::Node> &Tree::getNodes() const {
     return nodes;
 }
 
+std::optional<std::variant<Tree, Blob>> Tree::getAtPath(const fs::path &path) const {
+    std::string base = path.root_name().string();
+    fs::path tail = path.relative_path();
+    if(nodes.find(base) == nodes.end()) return {};
+    Node n = nodes.at(base);
+    if(tail.empty()) {
+        return *n;
+    } else {
+        if(n.isBlob()) return {};
+        else return std::get<Tree>(n.getData()).getAtPath(tail);
+    }
+}
+
 void Tree::setProvider(std::shared_ptr<Provider> prov) {
     this->prov = std::move(prov);
 }

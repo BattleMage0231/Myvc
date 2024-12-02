@@ -7,11 +7,14 @@
 #include <utility>
 #include <variant>
 #include <optional>
+#include <filesystem>
 #include "object.h"
 #include "hash.h"
 #include "blob.h"
 
 namespace myvc {
+
+namespace fs = std::filesystem;
 
 class Tree : public Object {
 public:
@@ -60,6 +63,7 @@ public:
 
     std::map<std::string, Node> &getNodes();
     const std::map<std::string, Node> &getNodes() const;
+    std::optional<std::variant<Tree, Blob>> getAtPath(const fs::path &) const;
     void setProvider(std::shared_ptr<Provider>);
 
     Iterator begin() const;

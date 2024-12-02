@@ -9,7 +9,7 @@ Log::Log(fs::path path, std::vector<std::string> rawArgs)
     : Command {std::move(path), std::move(rawArgs)} {}
 
 void Log::printHelpMessage() {
-    std::cerr << "usage: myvc log commit" << std::endl;
+    std::cerr << "usage: myvc log [-n NUM] commit" << std::endl;
 }
 
 void Log::createRules() {

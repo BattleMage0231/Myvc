@@ -45,6 +45,13 @@ protected:
     size_t resolveNumber(const std::string &) const;
     Commit resolveSymbol(const std::string &) const;
     Head resolveHead() const;
+    Index resolveIndex();
+    fs::path resolvePath(const std::string &) const;
+    fs::path getRelative(const fs::path &) const;
+
+    void ensureIsFile(const fs::path &) const;
+    void ensureExists(const fs::path &) const;
+    void ensureWithinRepo(const fs::path &) const;
 
 public:
     void execute();

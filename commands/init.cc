@@ -11,10 +11,9 @@ void Init::printHelpMessage() {
 }
 
 void Init::process() {
-    if(fs::exists(path / ".myvc")) {
-        throw command_error {"repository already exists"};
-    } else {
-        fs::create_directory(path / ".myvc");
+    if(RepositoryStore::createAt(path)) {
         std::cout << "initialized repository at " << path << std::endl;
+    } else {
+        throw command_error {"repository already exists"};
     }
 }

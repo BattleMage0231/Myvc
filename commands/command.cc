@@ -4,7 +4,7 @@ using namespace myvc;
 using namespace myvc::commands;
 
 Command::Command(fs::path path, std::vector<std::string> rawArgs, bool useStore)
-    : rawArgs {std::move(rawArgs)}, useStore {useStore}, path {std::move(path)} {}
+    : rawArgs {std::move(rawArgs)}, useStore {useStore}, path {fs::canonical(path)} {}
 
 void Command::parseArgs() {
     for(size_t i = 0; i < rawArgs.size();) {
@@ -84,4 +84,54 @@ Head Command::resolveHead() const {
     auto head = store->getHead();
     if(head) return *head;
     else throw command_error {"HEAD does not exist"}; 
+}
+
+Index Command::resolveIndex() {
+    auto index = store->getIndex();
+    if(index) return *index;
+    else {
+        Tree t;
+        t.store();
+        Index index {t.getHash(), t.getHash(), store};
+        index.store();
+        return index;
+    }
+}
+
+fs::path Command::resolvePath(const std::string &p) const {
+    fs::path res;
+    try {
+        res = fs::path {p};
+    } catch(...) {
+        throw command_error {"malformed path " + p};
+    }
+    ensureExists(res);
+    ensureWithinRepo(res);
+    return fs::canonical(res);
+}
+
+fs::path Command::getRelative(const fs::path &abs) const {
+    fs::path rel;
+    auto it = abs.begin();
+    for(auto baseIt = path.begin(); baseIt != path.end(); ++baseIt) ++it;
+    for(; it != abs.end(); ++it) rel /= *it;
+    return rel;
+}
+
+void Command::ensureIsFile(const fs::path &p) const {
+    if(fs::is_directory(p)) {
+        throw command_error {"path " + static_cast<std::string>(p) + " is not a file"};
+    }
+}
+
+void Command::ensureExists(const fs::path &p) const {
+    if(!fs::exists(p)) {
+        throw command_error {"path " + static_cast<std::string>(p) + " does not exist"};
+    }
+}
+
+void Command::ensureWithinRepo(const fs::path &p) const {
+    if(std::mismatch(p.begin(), p.end(), path.begin(), path.end()).second != path.end()) {
+        throw command_error {"path " + static_cast<std::string>(p) + " is not within the repository at " + static_cast<std::string>(path)};
+    }
 }

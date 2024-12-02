@@ -21,17 +21,19 @@ public:
     public:
         virtual std::optional<Index> getIndex() const = 0;
         virtual void updateIndex(const Index &) = 0;
+        virtual std::optional<Tree> getTree(Hash) const = 0;
+        virtual void createTree(const Tree &) = 0;
         virtual std::optional<Blob> getBlob(Hash) const = 0;
         virtual void createBlob(const Blob &) = 0;
         virtual ~Provider() {};
     };
 
 private:
-    std::map<fs::path, Hash> blobs;
+    Hash baseHash, treeHash;
     std::shared_ptr<Provider> prov;
 
 public:
-    explicit Index(std::map<fs::path, Hash> blobs = {}, std::shared_ptr<Provider> prov = {});
+    explicit Index(Hash baseHash = {}, Hash treeHash = {}, std::shared_ptr<Provider> prov = {});
     explicit Index(std::istream &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
@@ -39,10 +41,10 @@ public:
     void reload() override;
     void store() override;
 
-    void addFile(fs::path, Hash);
-    void removeFile(const fs::path &);
-    std::optional<Blob> getFile(const fs::path &) const;
-    Tree applyChanges(const Tree &) const;
+    void updateFile(const fs::path &, Hash);
+    void deleteFile(const fs::path &);
+    void updateBase(Hash);
+    Tree getTree() const;
     void setProvider(std::shared_ptr<Provider>);
 };
 
