@@ -30,7 +30,7 @@ class Command {
     void parseArgs();
 
 protected:
-    fs::path path;
+    fs::path repoPath;
     std::shared_ptr<RepositoryStore> store;
     std::map<std::string, size_t> flagRules;
     std::map<std::string, std::vector<std::string>> flagArgs;
@@ -46,7 +46,7 @@ protected:
     Commit resolveSymbol(const std::string &) const;
     Head resolveHead() const;
     Index resolveIndex();
-    fs::path resolvePath(const std::string &, bool) const;
+    fs::path resolvePath(const std::string &) const;
     fs::path getRelative(const fs::path &) const;
 
     void ensureIsFile(const fs::path &) const;

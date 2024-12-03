@@ -2,11 +2,12 @@
 #include <iostream>
 #include <vector>
 #include "log.h"
+#include "../hash.h"
 
 using namespace myvc::commands;
 
-Log::Log(fs::path path, std::vector<std::string> rawArgs)
-    : Command {std::move(path), std::move(rawArgs)} {}
+Log::Log(fs::path repoPath, std::vector<std::string> rawArgs)
+    : Command {std::move(repoPath), std::move(rawArgs)} {}
 
 void Log::printHelpMessage() {
     std::cerr << "usage: myvc log [-n NUM] commit" << std::endl;

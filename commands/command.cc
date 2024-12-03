@@ -3,8 +3,8 @@
 using namespace myvc;
 using namespace myvc::commands;
 
-Command::Command(fs::path path, std::vector<std::string> rawArgs, bool useStore)
-    : rawArgs {std::move(rawArgs)}, useStore {useStore}, path {fs::canonical(path)} {}
+Command::Command(fs::path repoPath, std::vector<std::string> rawArgs, bool useStore)
+    : rawArgs {std::move(rawArgs)}, useStore {useStore}, repoPath {fs::canonical(repoPath)} {}
 
 void Command::parseArgs() {
     for(size_t i = 0; i < rawArgs.size();) {
@@ -32,23 +32,13 @@ void Command::execute() {
     } else {
         if(useStore) {
             try {
-                store = std::make_shared<RepositoryStore>(path);
+                store = std::make_shared<RepositoryStore>(repoPath);
             } catch(...) {
                 throw command_error {"repository does not exist"};
             }
         }
         process();
     }
-}
-
-std::vector<char> hexToChars(const std::string &str) {
-    std::stringstream ss {str};
-    std::vector<char> res;
-    for(size_t i = 0; i < str.size(); ++i) {
-        std::string b = str.substr(i, 2);
-        res.push_back(static_cast<char>(std::stoi(b, nullptr, 16)));
-    }
-    return res;
 }
 
 size_t Command::resolveNumber(const std::string &str) const {
@@ -60,23 +50,14 @@ size_t Command::resolveNumber(const std::string &str) const {
 }
 
 Commit Command::resolveSymbol(const std::string &str) const {
-    if(str == "HEAD") {
-        return *resolveHead();
-    } else {
-        // resolve commit
-        std::vector<char> chars;
-        try {
-            chars = hexToChars(str);
-        } catch(...) {
-            throw command_error {"illegal commit symbol " + str};
-        }
-        if(chars.size() != 20) throw command_error {"illegal commit symbol " + str};
-        Hash h { hexToChars(str) };
-        try {
-            return store->getCommit(h).value();
-        } catch(...) {
-            throw command_error {"commit " + str + " does not exist"}; 
-        }
+    // extract commit part
+    size_t split = str.find('^');
+    std::string main = str.substr(0, split);
+    try {
+        Commit c = store->getCommit(store->resolvePartialObjectHash(main).value()).value();
+        return c;
+    } catch(...) {
+        throw command_error {"illegal commit symbol " + str};
     }
 }
 
@@ -98,24 +79,19 @@ Index Command::resolveIndex() {
     }
 }
 
-fs::path Command::resolvePath(const std::string &p, bool mustExist) const {
+fs::path Command::resolvePath(const std::string &p) const {
     fs::path res;
     try {
-        res = fs::path {p};
+        res = fs::weakly_canonical(fs::absolute(fs::path {p}));
     } catch(...) {
         throw command_error {"malformed path " + p};
     }
-    if(mustExist) ensureExists(res);
     ensureWithinRepo(res);
-    return fs::weakly_canonical(res);
+    return res;
 }
 
 fs::path Command::getRelative(const fs::path &abs) const {
-    fs::path rel;
-    auto it = abs.begin();
-    for(auto baseIt = path.begin(); baseIt != path.end(); ++baseIt) ++it;
-    for(; it != abs.end(); ++it) rel /= *it;
-    return rel;
+    return fs::proximate(abs, repoPath);
 }
 
 void Command::ensureIsFile(const fs::path &p) const {
@@ -131,7 +107,7 @@ void Command::ensureExists(const fs::path &p) const {
 }
 
 void Command::ensureWithinRepo(const fs::path &p) const {
-    if(std::mismatch(p.begin(), p.end(), path.begin(), path.end()).second != path.end()) {
-        throw command_error {"path " + static_cast<std::string>(p) + " is not within the repository at " + static_cast<std::string>(path)};
+    if(std::mismatch(p.begin(), p.end(), repoPath.begin(), repoPath.end()).second != repoPath.end()) {
+        throw command_error {"path " + static_cast<std::string>(p) + " is not within the repository at " + static_cast<std::string>(repoPath)};
     }
 }

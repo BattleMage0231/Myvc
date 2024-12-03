@@ -2,6 +2,7 @@
 
 #include <compare>
 #include <string>
+#include <iostream>
 #include "serialize.h"
 
 namespace myvc {
@@ -16,14 +17,16 @@ public:
 
     SHA1Hash(const std::vector<char> &);
 
-    std::strong_ordering operator<=>(const SHA1Hash &other) const;
+    SHA1Hash(const std::string &);
 
+    std::strong_ordering operator<=>(const SHA1Hash &other) const;
     bool operator==(const SHA1Hash &) const;
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
 
     operator std::string() const;
+    friend std::ostream &operator<<(std::ostream &, const SHA1Hash &);
 };
 
 using Hash = SHA1Hash;

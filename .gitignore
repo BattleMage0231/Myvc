@@ -7,3 +7,4 @@ tests/
 commands/*.o
 commands/*.d
 .myvc/
+test_repo/

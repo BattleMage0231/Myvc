@@ -36,11 +36,10 @@ void Blob::read(std::istream &in) {
     size_t sz;
     read_raw(in, sz);
     data.clear();
-    data.reserve(sz);
     for(size_t i = 0; i < sz; ++i) {
         char c;
         read_raw(in, c);
-        data.push_back(c);
+        data.emplace_back(c);
     }
 }
 

@@ -8,8 +8,8 @@
 
 using namespace myvc::commands;
 
-Commit::Commit(fs::path path, std::vector<std::string> rawArgs)
-    : Command {std::move(path), std::move(rawArgs)} {}
+Commit::Commit(fs::path repoPath, std::vector<std::string> rawArgs)
+    : Command {std::move(repoPath), std::move(rawArgs)} {}
 
 void Commit::printHelpMessage() {
     std::cerr << "usage: myvc commit [-m msg]" << std::endl;
@@ -51,7 +51,7 @@ void Commit::process() {
         } else {
             Branch main {"main", c.getHash(), store};
             main.store();
-            Head newHead {main, store};
+            Head newHead {main.getName(), store};
             newHead.store();
         }
         index.reset(index.getTree().getHash());

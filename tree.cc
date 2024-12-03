@@ -13,12 +13,12 @@ Tree::Node::Node(std::istream &in, std::weak_ptr<Provider> prov) : prov {prov} {
 
 void Tree::Node::write(std::ostream &out) const {
     write_raw(out, blob);
-    out << dataHash;
+    dataHash.write(out);
 }
 
 void Tree::Node::read(std::istream &in) {
     read_raw(in, blob);
-    in >> dataHash;
+    dataHash.read(in);
 }
 
 bool Tree::Node::isBlob() const {
@@ -52,7 +52,7 @@ void Tree::Node::setProvider(std::weak_ptr<Provider> prov) {
 Tree::Tree(std::map<std::string, Node> nodes, std::shared_ptr<Provider> prov)
     : nodes {std::move(nodes)}, prov {std::move(prov)}
 {
-    for(auto &[k, v] : nodes) {
+    for(auto &[k, v] : this->nodes) {
         v.setProvider(this->prov);
     }
 }
@@ -65,7 +65,7 @@ void Tree::write(std::ostream &out) const {
     write_raw(out, nodes.size());
     for(const auto &[name, node] : nodes) {
         write_string(out, name);
-        out << node;
+        node.write(out);
     }
 }
 
@@ -76,11 +76,10 @@ void Tree::read(std::istream &in) {
     for(size_t i = 0; i < sz; ++i) {
         std::string name;
         read_string(in, name);
-        bool blob;
-        read_raw(in, blob);
-        Hash h;
-        in >> h;
-        nodes.insert_or_assign(std::move(name), Node {h, blob, prov});
+        Node n;
+        n.read(in);
+        n.setProvider(prov);
+        nodes.insert_or_assign(std::move(name), std::move(n));
     }
 }
 
@@ -113,11 +112,11 @@ std::map<fs::path, Blob> Tree::getAllFiles() const {
 }
 
 std::optional<std::variant<Tree, Blob>> Tree::getAtPath(const fs::path &path) const {
-    std::string base = path.root_name().string();
-    fs::path tail = path.relative_path();
+    std::string base = (*path.begin()).string();
+    fs::path tail = fs::proximate(path, *path.begin());
     if(nodes.find(base) == nodes.end()) return {};
     Node n = nodes.at(base);
-    if(tail.empty()) {
+    if(tail == ".") {
         return *n;
     } else {
         if(n.isBlob()) return {};
@@ -127,17 +126,22 @@ std::optional<std::variant<Tree, Blob>> Tree::getAtPath(const fs::path &path) co
 
 void Tree::setProvider(std::shared_ptr<Provider> prov) {
     this->prov = std::move(prov);
+    for(auto &[k, v] : nodes) {
+        v.setProvider(this->prov);
+    }
 }
 
 void Tree::updateEntry(const fs::path &path, Node node) {
-    std::string base = path.root_name().string();
-    fs::path tail = path.relative_path();
-    if(nodes.find(base) == nodes.end()) return;
-    if(tail.empty()) {
-        node.setProvider(prov);
+    std::string base = (*path.begin()).string();
+    fs::path tail = fs::proximate(path, *path.begin());
+    node.setProvider(prov);
+    if(tail == ".") {
         nodes.insert_or_assign(base, std::move(node));
     } else {
-        Tree t = std::get<Tree>(nodes[base].getData());
+        Tree t {{}, prov};
+        if(nodes.find(base) != nodes.end()) {
+            t = std::get<Tree>(nodes[base].getData());
+        }
         t.updateEntry(tail, std::move(node));
         nodes[base].setTree(t.getHash());
     }
@@ -145,15 +149,19 @@ void Tree::updateEntry(const fs::path &path, Node node) {
 }
 
 void Tree::deleteEntry(const fs::path &path) {
-    std::string base = path.root_name().string();
-    fs::path tail = path.relative_path();
+    std::string base = (*path.begin()).string();
+    fs::path tail = fs::proximate(path, *path.begin());
     if(nodes.find(base) == nodes.end()) return;
-    if(tail.empty()) {
-        nodes.erase(path);
+    if(tail == ".") {
+        nodes.erase(base);
     } else {
         Tree t = std::get<Tree>(nodes[base].getData());
         t.deleteEntry(tail);
-        nodes[base].setTree(t.getHash());
+        if(t.nodes.empty()) {
+            nodes.erase(base);
+        } else {
+            nodes[base].setTree(t.getHash());
+        }
     }
     store();
 }

@@ -12,11 +12,13 @@ Index::Index(std::istream &in, std::shared_ptr<Provider> prov) : prov {prov} {
 }
 
 void Index::write(std::ostream &out) const {
-    out << baseHash << treeHash;
+    baseHash.write(out);
+    treeHash.write(out);
 }
 
 void Index::read(std::istream &in) {
-    in >> baseHash >> treeHash;
+    baseHash.read(in);
+    treeHash.read(in);
 }
 
 void Index::reload() {
@@ -64,12 +66,16 @@ void Index::updateBase(Hash newBase) {
     store();
 }
 
+Tree Index::getBase() const {
+    return prov->getTree(baseHash).value();
+}
+
 Tree Index::getTree() const {
     return prov->getTree(treeHash).value();
 }
 
 TreeDiff Index::getDiff() const {
-    return TreeDiff {getTree().getAllFiles(), prov->getTree(baseHash).value().getAllFiles()};
+    return TreeDiff {prov->getTree(baseHash).value().getAllFiles(), getTree().getAllFiles()};
 }
 
 void Index::setProvider(std::shared_ptr<Provider> prov) {

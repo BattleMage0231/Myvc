@@ -36,9 +36,6 @@ class RepositoryStore :
     template<typename T> std::optional<T> load(const fs::path &) const;
     void store(const fs::path &, const Serializable &); 
 
-    Tree getTreeAt(const fs::path &);
-    void setTreeAt(const fs::path &, const Tree &);
-
 public:
     explicit RepositoryStore(fs::path);
 
@@ -58,7 +55,10 @@ public:
     std::optional<Index> getIndex() const override;
     void updateIndex(const Index &) override;
 
+    Tree getTreeAt(const fs::path &);
+    Blob getBlobAt(const fs::path &);
     Tree getWorkingTree();
+    void setTreeAt(const fs::path &, const Tree &);
     void setWorkingTree(const Tree &);
 
     std::optional<Hash> resolvePartialObjectHash(const std::string &);

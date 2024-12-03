@@ -8,6 +8,7 @@
 #include "commands/add.h"
 #include "commands/status.h"
 #include "commands/commit.h"
+#include "commands/print.h"
 
 using namespace myvc::commands;
 
@@ -26,6 +27,8 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return std::make_unique<Status>(cur, args);
     } else if(subcmd == "commit") {
         return std::make_unique<Commit>(cur, args);
+    } else if(subcmd == "print") {
+        return std::make_unique<Print>(cur, args);
     } else {
         return {};
     }

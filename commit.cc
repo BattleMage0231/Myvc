@@ -59,8 +59,8 @@ Commit::Commit(std::istream &in, std::shared_ptr<Provider> prov) : prov {prov} {
 
 void Commit::write(std::ostream &out) const {
     write_raw(out, parentHashes.size());
-    for(const auto &h : parentHashes) out << h;
-    out << treeHash;
+    for(const auto &h : parentHashes) h.write(out);
+    treeHash.write(out);
     write_raw(out, time);
     write_string(out, msg);
 }
@@ -71,10 +71,10 @@ void Commit::read(std::istream &in) {
     parentHashes.clear();
     for(size_t i = 0; i < sz; ++i) {
         Hash h;
-        in >> h;
+        h.read(in);
         parentHashes.insert(std::move(h));
     }
-    in >> treeHash;
+    treeHash.read(in);
     read_raw(in, time);
     read_string(in, msg);
 }

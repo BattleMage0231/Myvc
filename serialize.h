@@ -15,16 +15,6 @@ public:
     virtual ~Serializable() {}
 };
 
-inline std::ostream &operator<<(std::ostream &out, const Serializable &s) {
-    s.write(out);
-    return out;
-}
-
-inline std::istream &operator>>(std::istream &in, Serializable &s) {
-    s.read(in);
-    return in;
-}
-
 template<typename T> inline void write_raw(std::ostream &out, const T &v) {
     const char *bytes = reinterpret_cast<const char *>(&v);
     out.write(bytes, sizeof(v));

@@ -15,7 +15,7 @@ void Head::write(std::ostream &out) const {
         write_string(out, std::get<std::string>(state));
     } else{
         write_raw(out, false);
-        out << std::get<Hash>(state);
+        std::get<Hash>(state).write(out);
     }
 }
 
@@ -28,7 +28,7 @@ void Head::read(std::istream &in) {
         state = std::move(s);
     } else {
         Hash h;
-        in >> h;
+        h.read(in);
         state = std::move(h);
     }
 }

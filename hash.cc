@@ -6,6 +6,7 @@
 #include <bit>
 #include "hash.h"
 #include "serialize.h"
+#include "errors.h"
 
 using namespace myvc;
 
@@ -114,6 +115,19 @@ SHA1Hash::SHA1Hash(const std::vector<char> &b) {
     for(size_t i = 0; i < 20; ++i) bytes[i] = b[i];
 }
 
+std::vector<char> hexToChars(const std::string &str) {
+    if(str.size() != 40) throw not_implemented {};
+    std::stringstream ss {str};
+    std::vector<char> res;
+    for(size_t i = 0; i < str.size(); i += 2) {
+        std::string b = str.substr(i, 2);
+        res.push_back(static_cast<char>(std::stoi(b, nullptr, 16)));
+    }
+    return res;
+}
+
+SHA1Hash::SHA1Hash(const std::string &hex) : SHA1Hash {hexToChars(hex)} {}
+
 std::strong_ordering SHA1Hash::operator<=>(const SHA1Hash &other) const {
     for(size_t i = 0; i < 20; ++i) {
         if(bytes[i] != other.bytes[i]) return bytes[i] <=> other.bytes[i];
@@ -139,4 +153,9 @@ SHA1Hash::operator std::string() const {
         ss << std::format("{:02x}", static_cast<unsigned char>(c));
     }
     return ss.str();
+}
+
+std::ostream &operator<<(std::ostream &out, const SHA1Hash &hash) {
+    out << static_cast<std::string>(hash);
+    return out;
 }

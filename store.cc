@@ -99,11 +99,25 @@ void RepositoryStore::updateHead(const Head &h) {
 }
 
 std::optional<Index> RepositoryStore::getIndex() const {
-    return load<Index>(getHeadPath());
+    return load<Index>(getIndexPath());
 }
 
 void RepositoryStore::updateIndex(const Index &i) {
     store(getIndexPath(), i);
+}
+
+Blob RepositoryStore::getBlobAt(const fs::path &path) {
+    Blob b {{}, getInstance()};
+    auto &vec = b.getData();
+    std::ifstream in {path, std::ios::binary};
+    in >> std::noskipws;
+    while(in) {
+        char c;
+        in >> c;
+        vec.emplace_back(c);
+    }
+    createBlob(b);
+    return b;
 }
 
 Tree RepositoryStore::getTreeAt(const fs::path &path) {
@@ -113,17 +127,8 @@ Tree RepositoryStore::getTreeAt(const fs::path &path) {
         if(entry.is_directory()) {
             Tree child = getTreeAt(entry.path());
             if(!child.getNodes().empty()) nodes[entry.path().filename()] = Tree::Node {child.getHash(), false};
-        } else {
-            Blob b {{}, getInstance()};
-            auto vec = b.getData();
-            std::ifstream in {entry.path(), std::ios::binary};
-            while(in) {
-                char c;
-                in >> c;
-                vec.push_back(c);
-            }
-            createBlob(b);
-            nodes[entry.path().filename()] = Tree::Node {b.getHash(), true};
+        } else { 
+            nodes[entry.path().filename()] = Tree::Node {getBlobAt(entry.path()).getHash(), true};
         }
     }
     Tree t {nodes, getInstance()};
@@ -144,6 +149,17 @@ void RepositoryStore::setWorkingTree(const Tree &) {
     throw not_implemented {};
 }
 
-std::optional<Hash> RepositoryStore::resolvePartialObjectHash(const std::string &) {
-    throw not_implemented {};
+std::optional<Hash> RepositoryStore::resolvePartialObjectHash(const std::string &partial) {
+    std::vector<Hash> hashes;
+    for(const auto &entry : fs::directory_iterator(getMyvcPath() / "objects")) {
+        if(entry.is_regular_file()) {
+            std::string entryHash = entry.path().filename().string();
+            if(entryHash.starts_with(partial)) {
+                hashes.emplace_back(Hash {entryHash});
+            }
+            if(hashes.size() >= 2) break;
+        }
+    }
+    if(hashes.size() != 1) return {};
+    else return hashes[0];
 }

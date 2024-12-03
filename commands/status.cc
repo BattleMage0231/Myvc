@@ -5,8 +5,8 @@
 
 using namespace myvc::commands;
 
-Status::Status(fs::path path, std::vector<std::string> rawArgs)
-    : Command {std::move(path), std::move(rawArgs)} {}
+Status::Status(fs::path repoPath, std::vector<std::string> rawArgs)
+    : Command {std::move(repoPath), std::move(rawArgs)} {}
 
 void Status::printHelpMessage() {
     std::cerr << "usage: myvc status" << std::endl;
@@ -52,10 +52,10 @@ void Status::process() {
     TreeDiff diff {indexTree.getAllFiles(), workingTree.getAllFiles()};
     auto wtChanges = diff.getChanges();
     if(wtChanges.empty()) {
-        std::cout << "No tracked files" << std::endl;
+        std::cout << "No untracked files" << std::endl;
     } else {
         std::cout << "Untracked files:" << std::endl;
-        for(const auto &[path, change] : changes) {
+        for(const auto &[path, change] : wtChanges) {
             std::cout << "    " << path << std::endl;
         }
     }
