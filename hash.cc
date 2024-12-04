@@ -155,7 +155,7 @@ SHA1Hash::operator std::string() const {
     return ss.str();
 }
 
-std::ostream &operator<<(std::ostream &out, const SHA1Hash &hash) {
+std::ostream &myvc::operator<<(std::ostream &out, const SHA1Hash &hash) {
     out << static_cast<std::string>(hash);
     return out;
 }

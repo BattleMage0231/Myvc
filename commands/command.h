@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include "../store.h"
 #include "../commit.h"
+#include "../hash.h"
 
 namespace myvc::commands {
 

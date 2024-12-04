@@ -1,3 +1,4 @@
+#include <sstream>
 #include "command.h"
 
 using namespace myvc;
@@ -51,10 +52,16 @@ size_t Command::resolveNumber(const std::string &str) const {
 
 Commit Command::resolveSymbol(const std::string &str) const {
     // extract commit part
-    size_t split = str.find('^');
-    std::string main = str.substr(0, split);
+    std::stringstream ss {str};
+    std::string token;
+    std::getline(ss, token, '^');
+    if(token == "HEAD") return *resolveHead();
     try {
-        Commit c = store->getCommit(store->resolvePartialObjectHash(main).value()).value();
+        Commit c = store->getCommit(store->resolvePartialObjectHash(token).value()).value();
+        while(std::getline(ss, token, '^')) {
+            size_t n = token == "" ? 0 : (std::stoull(token) - 1);
+            c = c.getParents().at(n - 1);
+        }
         return c;
     } catch(...) {
         throw command_error {"illegal commit symbol " + str};

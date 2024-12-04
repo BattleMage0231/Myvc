@@ -26,8 +26,9 @@ public:
     void read(std::istream &) override;
 
     operator std::string() const;
-    friend std::ostream &operator<<(std::ostream &, const SHA1Hash &);
 };
+
+std::ostream &operator<<(std::ostream &, const SHA1Hash &);
 
 using Hash = SHA1Hash;
 
