@@ -57,12 +57,7 @@ void Index::reset(Hash newBase) {
 }
 
 void Index::updateBase(Hash newBase) {
-    Tree newBaseTree = prov->getTree(newBase).value();
-    TreeDiff diff = getDiff();
-    if(!diff.getChanges().empty()) {
-        throw not_implemented {};
-    }
-    baseHash = newBaseTree.getHash();
+    baseHash = newBase;
     store();
 }
 

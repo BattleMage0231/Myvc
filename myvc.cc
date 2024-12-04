@@ -11,6 +11,7 @@
 #include "commands/print.h"
 #include "commands/rm.h"
 #include "commands/diff.h"
+#include "commands/reset.h"
 
 using namespace myvc::commands;
 
@@ -35,6 +36,8 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return std::make_unique<Rm>(cur, args);
     } else if(subcmd == "diff") {
         return std::make_unique<Diff>(cur, args);
+    } else if(subcmd == "reset") {
+        return std::make_unique<Reset>(cur, args);
     } else {
         return {};
     }

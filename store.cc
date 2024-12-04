@@ -140,13 +140,20 @@ Tree RepositoryStore::getWorkingTree() {
     return getTreeAt(path);
 }
 
-void RepositoryStore::setTreeAt(const fs::path &path, const Tree &tree) {
-    throw not_implemented {};
-}
-
-void RepositoryStore::setWorkingTree(const Tree &) {
-    // compute the diff, and then write the files as needed
-    throw not_implemented {};
+void RepositoryStore::setWorkingTree(const Tree &tree) {
+    TreeDiff diff = Tree::diff(getWorkingTree(), tree);
+    for(const auto &[path, change] : diff.getChanges()) {
+        if(change.type == TreeChange::Type::Add || change.type == TreeChange::Type::Modify) {
+            fs::create_directories(path.parent_path());
+            std::ofstream out {path};
+            change.newBlob.write(out);
+        } else {
+            fs::remove(path);
+            for(fs::path par = path.parent_path(); par != "." && fs::is_directory(par) && fs::is_empty(par); par = par.parent_path()) {
+                fs::remove(par);
+            }
+        }
+    }
 }
 
 std::optional<Hash> RepositoryStore::resolvePartialObjectHash(const std::string &partial) {

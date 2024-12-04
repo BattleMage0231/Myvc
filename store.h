@@ -58,7 +58,6 @@ public:
     Tree getTreeAt(const fs::path &);
     Blob getBlobAt(const fs::path &);
     Tree getWorkingTree();
-    void setTreeAt(const fs::path &, const Tree &);
     void setWorkingTree(const Tree &);
 
     std::optional<Hash> resolvePartialObjectHash(const std::string &);
