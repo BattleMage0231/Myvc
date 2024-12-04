@@ -82,6 +82,14 @@ std::optional<Branch> RepositoryStore::getBranch(const std::string &name) const 
     return load<Branch>(getBranchPath(name));
 }
 
+std::vector<Branch> RepositoryStore::getAllBranches() const {
+    std::vector<Branch> res;
+    for(const auto &entry : fs::directory_iterator(getMyvcPath() / "refs")) {
+        res.emplace_back(load<Branch>(entry.path()).value());
+    }
+    return res;
+}
+
 void RepositoryStore::deleteBranch(const std::string &name) {
     fs::remove(getBranchPath(name));
 }

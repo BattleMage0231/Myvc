@@ -46,6 +46,7 @@ public:
     std::optional<Blob> getBlob(Hash) const override;
     void createBlob(const Blob &) override;
 
+    std::vector<Branch> getAllBranches() const;
     std::optional<Branch> getBranch(const std::string &) const override;
     void deleteBranch(const std::string &);
     void updateBranch(const Branch &) override;
