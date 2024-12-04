@@ -23,7 +23,6 @@ void Add::process() {
     } else {
         Index index = resolveIndex();
         Tree indexTree = index.getTree();
-        bool recursive = flagArgs.find("-r") != flagArgs.end();
         std::vector<fs::path> paths;
         for(const std::string &arg : args) {
             fs::path rel = getRelative(resolvePath(arg));
@@ -42,14 +41,8 @@ void Add::process() {
                     Tree tree = store->getTreeAt(path);
                     if(tree.getNodes().empty()) {
                         index.deleteEntry(path);
-                    } else if(recursive) {
-                        index.updateEntry(path, tree);
                     } else {
-                        for(const auto &[k, node] : tree) {
-                            if(node.isBlob()) {
-                                index.updateEntry(path / k, std::get<Blob>(node.getData()));
-                            }
-                        }
+                        index.updateEntry(path, tree);
                     }
                 } else {
                     // add file

@@ -22,7 +22,7 @@ void Commit::createRules() {
 
 void Commit::process() {
     Index index = resolveIndex();
-    if(index.getDiff().getChanges().empty()) {
+    if(index.getTree().getHash() == index.getBase().getHash()) {
         std::cout << "No changes to commit" << std::endl;
     } else {
         std::string msg;

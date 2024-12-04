@@ -94,6 +94,10 @@ fs::path Command::resolvePath(const std::string &p) const {
         throw command_error {"malformed path " + p};
     }
     ensureWithinRepo(res);
+    fs::path myvc = repoPath / ".myvc";
+    if(std::mismatch(res.begin(), res.end(), myvc.begin(), myvc.end()).second == myvc.end()) {
+        throw command_error {"path" + static_cast<std::string>(p) + " cannot point to the .myvc directory"};
+    }
     return res;
 }
 
