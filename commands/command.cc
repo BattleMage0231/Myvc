@@ -56,6 +56,8 @@ Commit Command::resolveSymbol(const std::string &str) const {
     std::string token;
     std::getline(ss, token, '^');
     if(token == "HEAD") return *resolveHead();
+    auto branch = store->getBranch(token);
+    if(branch) return *(branch.value());
     try {
         Commit c = store->getCommit(store->resolvePartialObjectHash(token).value()).value();
         while(std::getline(ss, token, '^')) {
@@ -84,6 +86,12 @@ Index Command::resolveIndex() {
         index.store();
         return index;
     }
+}
+
+Branch Command::resolveBranch(const std::string &name) const {
+    auto branch = store->getBranch(name);
+    if(!branch) throw command_error {"Branch " + name + " does not exist"};
+    return branch.value();
 }
 
 fs::path Command::resolvePath(const std::string &p) const {

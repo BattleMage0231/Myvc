@@ -13,6 +13,7 @@
 #include "commands/diff.h"
 #include "commands/reset.h"
 #include "commands/branch.h"
+#include "commands/checkout.h"
 
 using namespace myvc::commands;
 
@@ -41,6 +42,8 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return std::make_unique<Reset>(cur, args);
     } else if(subcmd == "branch") {
         return std::make_unique<Branch>(cur, args);
+    } else if(subcmd == "checkout") {
+        return std::make_unique<Checkout>(cur, args);
     } else {
         return {};
     }

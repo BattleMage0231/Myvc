@@ -47,6 +47,7 @@ protected:
     Commit resolveSymbol(const std::string &) const;
     Head resolveHead() const;
     Index resolveIndex();
+    Branch resolveBranch(const std::string &) const; 
     fs::path resolvePath(const std::string &) const;
     fs::path getRelative(const fs::path &) const;
 
