@@ -75,7 +75,7 @@ Tree Index::getTree() const {
 }
 
 TreeDiff Index::getDiff() const {
-    return TreeDiff {prov->getTree(baseHash).value().getAllFiles(), getTree().getAllFiles()};
+    return Tree::diff(prov->getTree(baseHash).value(), getTree());
 }
 
 void Index::setProvider(std::shared_ptr<Provider> prov) {

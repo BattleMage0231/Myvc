@@ -10,6 +10,7 @@
 #include "commands/commit.h"
 #include "commands/print.h"
 #include "commands/rm.h"
+#include "commands/diff.h"
 
 using namespace myvc::commands;
 
@@ -32,6 +33,8 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return std::make_unique<Print>(cur, args);
     } else if(subcmd == "rm") {
         return std::make_unique<Rm>(cur, args);
+    } else if(subcmd == "diff") {
+        return std::make_unique<Diff>(cur, args);
     } else {
         return {};
     }

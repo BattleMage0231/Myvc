@@ -4,6 +4,10 @@
 
 using namespace myvc;
 
+TreeDiff Tree::diff(const Tree &a, const Tree &b) {
+    return TreeDiff {a.getAllFiles(), b.getAllFiles()};
+}
+
 Tree::Node::Node(Hash dataHash, bool blob, std::weak_ptr<Provider> prov)
     : dataHash {dataHash}, blob {blob}, prov {std::move(prov)} {}
 

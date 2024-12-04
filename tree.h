@@ -12,6 +12,7 @@
 #include "object.h"
 #include "hash.h"
 #include "blob.h"
+#include "treediff.h"
 
 namespace myvc {
 
@@ -54,6 +55,8 @@ private:
 
 public:
     using Iterator = std::map<std::string, Node>::const_iterator;
+
+    static TreeDiff diff(const Tree &, const Tree &);
 
     explicit Tree(std::map<std::string, Node> nodes = {}, std::shared_ptr<Provider> prov = {});
     explicit Tree(std::istream &, std::shared_ptr<Provider> prov = {});

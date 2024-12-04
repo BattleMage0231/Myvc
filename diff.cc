@@ -127,7 +127,7 @@ Diff::Diff(std::vector<std::string> base, std::vector<Hunk> hunks)
     : base {std::move(base)}, hunks {std::move(hunks)} {}
 
 std::vector<std::string> Diff::apply() const {
-    if(hunks.size() == 0) return base;
+    if(hunks.empty()) return base;
     std::vector<std::string> res = hunks.front().getTheirs();
     for(size_t i = 1; i < hunks.size(); ++i) {
         res.insert(res.end(), base.begin() + hunks[i - 1].getEnd(), base.begin() + hunks[i].getIndex());

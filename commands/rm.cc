@@ -10,7 +10,7 @@ Rm::Rm(fs::path repoPath, std::vector<std::string> rawArgs)
     : Command {std::move(repoPath), std::move(rawArgs)} {}
 
 void Rm::printHelpMessage() {
-    std::cerr << "usage: myvc rm [-r] path1 ... pathn" << std::endl;
+    std::cerr << "usage: myvc rm [-r] [--cached] path1 ... pathn" << std::endl;
 }
 
 void Rm::createRules() {
