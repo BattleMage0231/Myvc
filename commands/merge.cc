@@ -11,10 +11,22 @@ Merge::Merge(fs::path repoPath, std::vector<std::string> rawArgs)
     : Command {std::move(repoPath), std::move(rawArgs)} {}
 
 void Merge::printHelpMessage() {
-    std::cerr << "usage: myvc merge commit" << std::endl;
+    std::cerr << "usage: myvc merge [--abort] [commit]" << std::endl;
+}
+
+void Merge::createRules() {
+    Command::createRules();
+    flagRules["--abort"] = 0;
 }
 
 void Merge::process() {
+    if(flagArgs.find("--abort") != flagArgs.end()) {
+        fs::remove(".myvc/MERGE_INFO");
+        std::cout << "Aborted." << std::endl;
+        return;
+    } else if(fs::exists(".myvc/MERGE_INFO")) {
+        throw command_error {"ongoing merge detected"};
+    }
     if(args.size() != 1) throw command_error {"invalid number of arguments"};
     ensureNoUncommitted();
     Head head = resolveHead();
@@ -24,9 +36,9 @@ void Merge::process() {
     Commit lcaCommit = lca.value();
     // compute three way diff
     TreeDiff diff1 = Tree::diff(lcaCommit.getTree(), (*head).getTree()), diff2 = Tree::diff(lcaCommit.getTree(), c.getTree());
-    if(diff1.getChanges().empty()) {
+    if((*head).hasParent(c)) {
         std::cout << "Already up to date." << std::endl;
-    } else if(diff2.getChanges().empty()) {
+    } else if(c.hasParent(*head)) {
         std::cout << "Fast forwarding..." << std::endl;
         if(head.getBranch()) {
             Branch b = head.getBranch().value();
@@ -36,8 +48,10 @@ void Merge::process() {
             head.setState(c);
             head.store();
         }
+        store->setWorkingTree(c.getTree());
     } else {
         auto res = TreeDiff::merge(diff1, diff2);
+        store->setWorkingTree(lcaCommit.getTree());
         // stage changes
         for(const auto &[path, change] : res.first.getChanges()) {
             if(change.type == TreeChange::Type::Add || change.type == TreeChange::Type::Modify) {
@@ -67,12 +81,13 @@ void Merge::process() {
             auto conflicts = res.second;
             const auto &changes1 = diff1.getChanges(), &changes2 = diff2.getChanges();
             for(const auto &path : conflicts.deleteConflicts) {
+                fs::create_directories(path.parent_path());
+                std::ofstream out {path};
                 std::cout << "CONFLICT: " << path << " (using ";
                 if(changes1.find(path) != changes1.end()) {
+                    changes1.at(path).newBlob.write(out);
                     std::cout << "HEAD";
                 } else {
-                    fs::create_directories(path.parent_path());
-                    std::ofstream out {path};
                     changes2.at(path).newBlob.write(out);
                     std::cout << "other";
                 }
@@ -104,6 +119,8 @@ void Merge::process() {
                 b.write(out);
                 std::cout << "CONFLICT: " << path << " (conflict markers inserted)" << std::endl;
             }
+            std::ofstream out {".myvc/MERGE_INFO"};
+            c.getHash().write(out);
             std::cout << "Merge conflict(s) detected." << std::endl;
         }
     }

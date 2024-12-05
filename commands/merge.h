@@ -6,6 +6,7 @@ namespace myvc::commands {
 
 class Merge : public Command {
     void printHelpMessage() override;
+    void createRules() override;
     void process() override;
 
 public:

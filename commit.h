@@ -49,6 +49,7 @@ public:
     void setTime(time_t);
     const std::string &getMsg() const;
     void setMsg(std::string);
+    bool hasParent(const Commit &) const;
     void setProvider(std::shared_ptr<Provider>);
 };
 

@@ -121,6 +121,14 @@ void Commit::setMsg(std::string str) {
     msg = std::move(str);
 }
 
+bool Commit::hasParent(const Commit &c) const {
+    if(*this == c) return true;
+    for(const Commit &par : getParents()) {
+        if(par.hasParent(c)) return true;
+    }
+    return false;
+}
+
 void Commit::setProvider(std::shared_ptr<Provider> prov) {
     this->prov = std::move(prov);
 }

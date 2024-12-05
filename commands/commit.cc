@@ -38,6 +38,13 @@ void Commit::process() {
         auto head = store->getHead();
         std::set<Hash> parents;
         if(head) parents.insert(head.value().getCommit().getHash());
+        if(fs::exists(".myvc/MERGE_INFO")) {
+            std::ifstream in {".myvc/MERGE_INFO"};
+            Hash h;
+            h.read(in);
+            parents.insert(h);
+            fs::remove(".myvc/MERGE_INFO");
+        }
         myvc::Commit c { parents, index.getTree().getHash(), time, msg, store };
         c.store();
         if(head && head.value().isBranch()) {
