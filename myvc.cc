@@ -15,6 +15,7 @@
 #include "commands/branch.h"
 #include "commands/checkout.h"
 #include "commands/merge.h"
+#include "commands/cherrypick.h"
 
 using namespace myvc::commands;
 
@@ -47,6 +48,8 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return std::make_unique<Checkout>(cur, args);
     } else if(subcmd == "merge") {
         return std::make_unique<Merge>(cur, args);
+    } else if(subcmd == "cherry-pick") {
+        return std::make_unique<Cherrypick>(cur, args);
     } else {
         return {};
     }
