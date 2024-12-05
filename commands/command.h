@@ -51,6 +51,7 @@ protected:
     fs::path resolvePath(const std::string &) const;
     fs::path getRelative(const fs::path &) const;
 
+    void ensureNoUncommitted();
     void ensureIsFile(const fs::path &) const;
     void ensureExists(const fs::path &) const;
     void ensureWithinRepo(const fs::path &) const;

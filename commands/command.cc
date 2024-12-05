@@ -113,6 +113,15 @@ fs::path Command::getRelative(const fs::path &abs) const {
     return fs::proximate(abs, repoPath);
 }
 
+void Command::ensureNoUncommitted() {
+    Index index = resolveIndex();
+    Head head = resolveHead();
+    TreeDiff diff1 = Tree::diff(store->getWorkingTree(), index.getTree()), diff2 = Tree::diff(index.getTree(), (*head).getTree());
+    if(!diff1.getChanges().empty() || !diff2.getChanges().empty()) {
+        throw command_error {"there are uncommitted changes"};
+    }
+}
+
 void Command::ensureIsFile(const fs::path &p) const {
     if(fs::is_directory(p)) {
         throw command_error {"path " + static_cast<std::string>(p) + " is not a file"};

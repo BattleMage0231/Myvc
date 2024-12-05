@@ -115,7 +115,7 @@ void RepositoryStore::updateIndex(const Index &i) {
 }
 
 Blob RepositoryStore::getBlobAt(const fs::path &path) {
-    Blob b {{}, getInstance()};
+    Blob b {std::vector<char> {}, getInstance()};
     auto &vec = b.getData();
     std::ifstream in {path, std::ios::binary};
     in >> std::noskipws;

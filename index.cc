@@ -61,6 +61,11 @@ void Index::updateBase(Hash newBase) {
     store();
 }
 
+void Index::updateTree(Hash newBase) {
+    treeHash = newBase;
+    store();
+}
+
 Tree Index::getBase() const {
     return prov->getTree(baseHash).value();
 }

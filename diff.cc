@@ -78,6 +78,14 @@ const std::vector<Change> &Hunk::getChanges() const {
     return changes;
 }
 
+std::vector<std::string> Hunk::getOurs() const {
+    std::vector<std::string> res;
+    for(const auto &change : this->changes) {
+        if(change.type == Change::Type::Delete) res.emplace_back(change.content);
+    }
+    return res;
+}
+
 std::vector<std::string> Hunk::getTheirs() const {
     std::vector<std::string> res;
     for(const auto &change : this->changes) {
@@ -86,11 +94,13 @@ std::vector<std::string> Hunk::getTheirs() const {
     return res;
 }
 
-Diff Diff::merge(const Diff &a, const Diff &b) {
+std::pair<Diff, Diff::Conflicts> Diff::merge(const Diff &a, const Diff &b) {
+    std::vector<std::string> base = a.getBase();
     auto aHunks = a.getHunks(), bHunks = b.getHunks();
     auto aIt = aHunks.begin(), bIt = bHunks.begin();
     std::vector<Hunk> hunks;
-    while(aIt < aHunks.end() && bIt < bHunks.end()) {
+    std::vector<std::pair<Hunk, Hunk>> conflicts;
+    while(aIt != aHunks.end() && bIt != bHunks.end()) {
         if(*aIt == *bIt) {
             hunks.emplace_back(*aIt);
             ++aIt; ++bIt;
@@ -98,14 +108,58 @@ Diff Diff::merge(const Diff &a, const Diff &b) {
             size_t as = aIt->getIndex(), ae = aIt->getEnd();
             size_t bs = bIt->getIndex(), be = bIt->getEnd();
             if((as <= bs && bs <= ae) || (bs <= as && as <= be)) {
-                if(aIt->getChanges().size() == 0) {
+                if(aIt->getChanges().empty()) {
                     hunks.emplace_back(*bIt);
-                } else if(bIt->getChanges().size() == 0) {
+                    ++aIt; ++bIt;
+                } else if(bIt->getChanges().empty()) {
                     hunks.emplace_back(*aIt);
+                    ++aIt; ++bIt;
                 } else {
-                    throw not_implemented {};
+                    size_t start = std::min(as, bs), end;
+                    std::vector<Change> aChanges, bChanges;
+                    auto aStart = aIt, bStart = bIt;
+                    while(aIt != aHunks.end() && bIt != bHunks.end()) {
+                        as = aIt->getIndex(); ae = aIt->getEnd();
+                        bs = bIt->getIndex(); be = bIt->getEnd();
+                        if((as <= bs && bs <= ae) || (bs <= as && as <= be)) {
+                            end = std::max(ae, be);
+                            if(ae == be) {
+                                ++aIt; ++bIt;
+                                break;
+                            }
+                            if(ae < be) ++aIt;
+                            else ++bIt;
+                        } else {
+                            end = std::min(ae, be);
+                            if(ae > be) ++aIt;
+                            else ++bIt;
+                            break;
+                        }
+                    }
+                    for(size_t i = start; i < end; ++i) {
+                        aChanges.emplace_back(Change { Change::Type::Delete, base[i] });
+                        bChanges.emplace_back(Change { Change::Type::Delete, base[i] });
+                    }
+                    for(size_t i = start; aStart != aIt; i = aStart->getEnd(), ++aStart) {
+                        while(i < aStart->getIndex()) {
+                            aChanges.emplace_back(Change { Change::Type::Add, base[i++] });
+                        }
+                        for(const auto &change : aStart->getChanges()) {
+                            if(change.type == Change::Type::Add) aChanges.emplace_back(change);
+                        }
+                    }
+                    for(size_t i = start; bStart != bIt; i = bStart->getEnd(), ++bStart) {
+                        while(i < bStart->getIndex()) {
+                            bChanges.emplace_back(Change { Change::Type::Add, base[i++] });
+                        }
+                        for(const auto &change : bStart->getChanges()) {
+                            if(change.type == Change::Type::Add) bChanges.emplace_back(change);
+                        }
+                    }
+                    for(size_t i = (--aStart)->getEnd(); i < end; ++i) aChanges.emplace_back(Change { Change::Type::Add, base[i] });
+                    for(size_t i = (--bStart)->getEnd(); i < end; ++i) bChanges.emplace_back(Change { Change::Type::Add, base[i] });
+                    conflicts.emplace_back(std::make_pair(Hunk { start, std::move(aChanges) }, Hunk { start, std::move(bChanges) }));
                 }
-                ++aIt; ++bIt;
             } else if(as <= bs) {
                 hunks.emplace_back(*aIt);
                 ++aIt;
@@ -117,7 +171,7 @@ Diff Diff::merge(const Diff &a, const Diff &b) {
     }
     hunks.insert(hunks.end(), aIt, aHunks.end());
     hunks.insert(hunks.end(), bIt, bHunks.end());
-    return Diff {a.getBase(), std::move(hunks)};
+    return { Diff {a.getBase(), std::move(hunks)}, conflicts };
 }
 
 Diff::Diff(std::vector<std::string> base, const std::vector<std::string> &other) 

@@ -27,6 +27,13 @@ Blob::Blob(std::istream &in, std::shared_ptr<Provider> prov) : prov {std::move(p
     read(in);
 }
 
+Blob::Blob(const std::vector<std::string> &lines, std::shared_ptr<Provider> prov) : prov {std::move(prov)} {
+    for(size_t i = 0; i < lines.size(); ++i) {
+        if(i != 0) data.push_back('\n');
+        data.insert(data.end(), lines[i].begin(), lines[i].end());
+    }
+}
+
 void Blob::write(std::ostream &out) const {
     write_raw(out, data.size());
     for(char c : data) write_raw(out, c);

@@ -17,8 +17,54 @@ bool TreeChange::operator==(const TreeChange &other) const {
     }
 }
 
-TreeDiff TreeDiff::merge(const TreeDiff &a, const TreeDiff &b) {
-    throw not_implemented {};
+std::pair<TreeDiff, TreeDiff::Conflicts> TreeDiff::merge(const TreeDiff &a, const TreeDiff &b) {
+    std::map<fs::path, TreeChange> changes = a.getChanges();
+    std::set<fs::path> deleteConflicts;
+    std::map<fs::path, std::pair<Diff, Diff::Conflicts>> modifyConflicts;
+    for(const auto &[path, change] : b.getChanges()) {
+        if(changes.find(path) == changes.end()) {
+            changes.insert_or_assign(path, change);
+            continue;
+        }
+        auto otherChange = changes.at(path);
+        if(change.type == TreeChange::Type::Modify) {
+            if(otherChange.type == TreeChange::Type::Modify) {
+                Diff bDiff = Blob::diff(change.oldBlob, change.newBlob);
+                Diff aDiff = Blob::diff(otherChange.oldBlob, otherChange.newBlob);
+                auto res = Diff::merge(bDiff, aDiff);
+                if(res.second.empty()) {
+                    changes.at(path) = TreeChange { TreeChange::Type::Modify, change.oldBlob, Blob {res.first.apply()} };
+                } else {
+                    changes.erase(path);
+                    modifyConflicts.insert_or_assign(path, res);
+                }
+            } else {
+                changes.erase(path);
+                deleteConflicts.insert(path);
+            }
+        } else if(change.type == TreeChange::Type::Add) {
+            if(otherChange.type == TreeChange::Type::Add) {
+                Diff bDiff = Blob::diff(change.oldBlob, change.newBlob);
+                Diff aDiff = Blob::diff(otherChange.oldBlob, otherChange.newBlob);
+                auto res = Diff::merge(bDiff, aDiff);
+                if(res.second.empty()) {
+                    changes.at(path) = TreeChange { TreeChange::Type::Add, change.oldBlob, Blob {res.first.apply()} };
+                } else {
+                    changes.erase(path);
+                    modifyConflicts.insert_or_assign(path, res);
+                }
+            } else {
+                changes.erase(path);
+                deleteConflicts.insert(path);
+            }
+        } else {
+            if(otherChange.type == TreeChange::Type::Modify || otherChange.type == TreeChange::Type::Add) {
+                changes.erase(path);
+                deleteConflicts.insert(path);
+            }
+        }
+    }
+    return { TreeDiff {std::move(changes)}, Conflicts { std::move(deleteConflicts), std::move(modifyConflicts) } };
 }
 
 TreeDiff::TreeDiff(const std::map<fs::path, Blob> &base, const std::map<fs::path, Blob> &other) {
@@ -37,6 +83,8 @@ TreeDiff::TreeDiff(const std::map<fs::path, Blob> &base, const std::map<fs::path
         }
     }
 }
+
+TreeDiff::TreeDiff(std::map<fs::path, TreeChange> changes) : changes {std::move(changes)} {}
 
 std::map<fs::path, TreeChange> &TreeDiff::getChanges() {
     return changes;

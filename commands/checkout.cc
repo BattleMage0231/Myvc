@@ -15,13 +15,10 @@ void Checkout::printHelpMessage() {
 
 void Checkout::process() {
     if(args.size() != 1) throw command_error {"illegal arguments"};
+    ensureNoUncommitted();
     Index index = resolveIndex();
     Head head = resolveHead();
     Branch b = resolveBranch(args.at(0));
-    TreeDiff diff1 = Tree::diff(store->getWorkingTree(), index.getTree()), diff2 = Tree::diff(index.getTree(), (*head).getTree());
-    if(!diff1.getChanges().empty() || !diff2.getChanges().empty()) {
-        throw command_error {"branch cannot be checked out with uncommitted changes"};
-    }
     index.reset((*b).getTree());
     head.setState(b.getName());
     head.store();

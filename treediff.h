@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <map>
+#include <set>
 #include "blob.h"
 
 namespace myvc {
@@ -23,9 +24,15 @@ class TreeDiff {
     std::map<fs::path, TreeChange> changes;
 
 public:
-    static TreeDiff merge(const TreeDiff &, const TreeDiff &);
+    struct Conflicts {
+        std::set<fs::path> deleteConflicts;
+        std::map<fs::path, std::pair<Diff, Diff::Conflicts>> modifyConflicts;
+    };
+
+    static std::pair<TreeDiff, Conflicts> merge(const TreeDiff &, const TreeDiff &);
 
     TreeDiff(const std::map<fs::path, Blob> &, const std::map<fs::path, Blob> &);
+    TreeDiff(std::map<fs::path, TreeChange>);
 
     std::map<fs::path, TreeChange> &getChanges();
     const std::map<fs::path, TreeChange> &getChanges() const;

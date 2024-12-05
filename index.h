@@ -46,6 +46,7 @@ public:
     void updateEntry(const fs::path &, const Blob &);
     void deleteEntry(const fs::path &);
     void reset(Hash);
+    void updateTree(Hash);
     void updateBase(Hash);
     Tree getBase() const;
     Tree getTree() const;

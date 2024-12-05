@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <utility>
 
 namespace myvc {
 
@@ -22,6 +23,7 @@ class Hunk {
 public:
     Hunk(size_t, std::vector<Change> changes = {});
 
+    std::vector<std::string> getOurs() const;
     std::vector<std::string> getTheirs() const;
 
     size_t getIndex() const;
@@ -37,7 +39,9 @@ class Diff {
     std::vector<Hunk> hunks;
 
 public:
-    static Diff merge(const Diff &, const Diff &);
+    using Conflicts = std::vector<std::pair<Hunk, Hunk>>;
+
+    static std::pair<Diff, Conflicts> merge(const Diff &, const Diff &);
 
     Diff(std::vector<std::string>, const std::vector<std::string> &);
 
