@@ -34,7 +34,6 @@ public:
     static std::vector<Commit> getAllReachable(const Commit &);
 
     explicit Commit(std::set<Hash> parentHashes = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {}, std::shared_ptr<Provider> prov = {});
-    explicit Commit(std::istream &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;

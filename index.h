@@ -35,7 +35,6 @@ private:
 
 public:
     explicit Index(Hash baseHash = {}, Hash treeHash = {}, std::shared_ptr<Provider> prov = {});
-    explicit Index(std::istream &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;

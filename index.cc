@@ -7,10 +7,6 @@ using namespace myvc;
 Index::Index(Hash baseHash, Hash treeHash, std::shared_ptr<Provider> prov)
     : baseHash {baseHash}, treeHash {treeHash}, prov {std::move(prov)} {}
 
-Index::Index(std::istream &in, std::shared_ptr<Provider> prov) : prov {prov} {
-    read(in);
-}
-
 void Index::write(std::ostream &out) const {
     write_hash(out, baseHash);
     write_hash(out, treeHash);

@@ -11,10 +11,6 @@ TreeDiff Tree::diff(const Tree &a, const Tree &b) {
 Tree::Node::Node(Hash dataHash, bool blob, std::weak_ptr<Provider> prov)
     : dataHash {dataHash}, blob {blob}, prov {std::move(prov)} {}
 
-Tree::Node::Node(std::istream &in, std::weak_ptr<Provider> prov) : prov {prov} {
-    read(in);
-}
-
 void Tree::Node::write(std::ostream &out) const {
     write_raw(out, blob);
     write_hash(out, dataHash);
@@ -59,10 +55,6 @@ Tree::Tree(std::map<std::string, Node> nodes, std::shared_ptr<Provider> prov)
     for(auto &[k, v] : this->nodes) {
         v.setProvider(this->prov);
     }
-}
-
-Tree::Tree(std::istream &in, std::shared_ptr<Provider> prov) : prov {prov} {
-    read(in);
 }
 
 void Tree::write(std::ostream &out) const {

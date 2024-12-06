@@ -23,10 +23,6 @@ Diff Blob::diff(const Blob &a, const Blob &b) {
 Blob::Blob(std::vector<char> data, std::shared_ptr<Provider> prov) 
     : data {std::move(data)}, prov {std::move(prov)} {}
 
-Blob::Blob(std::istream &in, std::shared_ptr<Provider> prov) : prov {std::move(prov)} {
-    read(in);
-}
-
 Blob::Blob(const std::vector<std::string> &lines, std::shared_ptr<Provider> prov) : prov {std::move(prov)} {
     for(size_t i = 0; i < lines.size(); ++i) {
         if(i != 0) data.push_back('\n');

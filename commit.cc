@@ -53,10 +53,6 @@ std::vector<Commit> Commit::getAllReachable(const Commit &c) {
 Commit::Commit(std::set<Hash> parentHashes, Hash treeHash, time_t time, std::string msg, std::shared_ptr<Provider> prov)
     : parentHashes {std::move(parentHashes)}, treeHash {treeHash}, time {time}, msg {std::move(msg)}, prov {std::move(prov)} {}
 
-Commit::Commit(std::istream &in, std::shared_ptr<Provider> prov) : prov {prov} {
-    read(in);
-}
-
 void Commit::write(std::ostream &out) const {
     write_raw(out, parentHashes.size());
     for(const auto &h : parentHashes) write_hash(out, h);

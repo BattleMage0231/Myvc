@@ -26,7 +26,6 @@ public:
     static Diff diff(const Blob &, const Blob &);
 
     explicit Blob(std::vector<char> data = {}, std::shared_ptr<Provider> prov = {});
-    explicit Blob(std::istream &, std::shared_ptr<Provider> prov = {});
     explicit Blob(const std::vector<std::string> &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;

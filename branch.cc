@@ -7,10 +7,6 @@ using namespace myvc;
 Branch::Branch(std::string name, Hash commitHash, std::shared_ptr<Provider> prov)
     : name {std::move(name)}, commitHash {commitHash}, prov {prov} {}
 
-Branch::Branch(std::istream &in, std::shared_ptr<Provider> prov) : prov {prov} {
-    read(in);
-}
-
 void Branch::write(std::ostream &out) const {
     write_string(out, name);
     write_hash(out, commitHash);

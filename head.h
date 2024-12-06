@@ -26,7 +26,6 @@ private:
 
 public:
     explicit Head(std::variant<std::string, Hash> state = {}, std::shared_ptr<Provider> prov = {});
-    explicit Head(std::istream &, std::shared_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;

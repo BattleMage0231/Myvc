@@ -45,7 +45,10 @@ RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {
 template<typename T> std::optional<T> RepositoryStore::load(const fs::path &path) const {
     std::ifstream in {path, std::ios::binary};
     if(!in) return {};
-    return T {in, getInstance()};
+    T t;
+    t.read(in);
+    t.setProvider(getInstance());
+    return t;
 }
 
 void RepositoryStore::store(const fs::path &path, const Serializable &s) {

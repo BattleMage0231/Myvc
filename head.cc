@@ -5,10 +5,6 @@ using namespace myvc;
 Head::Head(std::variant<std::string, Hash> state, std::shared_ptr<Provider> prov)
     : state {std::move(state)}, prov {std::move(prov)} {}
 
-Head::Head(std::istream &in, std::shared_ptr<Provider> prov) : prov {prov} {
-    read(in);
-}
-
 void Head::write(std::ostream &out) const {
     if(isBranch()) {
         write_raw(out, true);
