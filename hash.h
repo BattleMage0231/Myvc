@@ -3,27 +3,24 @@
 #include <compare>
 #include <string>
 #include <iostream>
-#include "serialize.h"
+#include <optional>
+#include <vector>
 
 namespace myvc {
 
-class SHA1Hash : public Serializable {
+class SHA1Hash {
     char bytes[20];
+    mutable std::optional<std::string> cachedHex;
 
 public:
     SHA1Hash();
 
-    SHA1Hash(const Serializable &);
+    explicit SHA1Hash(const std::vector<char> &);
 
-    SHA1Hash(const std::vector<char> &);
-
-    SHA1Hash(const std::string &);
+    explicit SHA1Hash(const std::string &);
 
     std::strong_ordering operator<=>(const SHA1Hash &other) const;
     bool operator==(const SHA1Hash &) const;
-
-    void write(std::ostream &) const override;
-    void read(std::istream &) override;
 
     operator std::string() const;
 };

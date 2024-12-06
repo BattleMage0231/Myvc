@@ -12,13 +12,13 @@ Index::Index(std::istream &in, std::shared_ptr<Provider> prov) : prov {prov} {
 }
 
 void Index::write(std::ostream &out) const {
-    baseHash.write(out);
-    treeHash.write(out);
+    write_hash(out, baseHash);
+    write_hash(out, treeHash);
 }
 
 void Index::read(std::istream &in) {
-    baseHash.read(in);
-    treeHash.read(in);
+    read_hash(in, baseHash);
+    read_hash(in, treeHash);
 }
 
 void Index::reload() {
@@ -31,22 +31,22 @@ void Index::store() {
 
 void Index::updateEntry(const fs::path &path, const Tree &tree) {
     Tree cur = getTree();
-    cur.updateEntry(path, Tree::Node { tree.getHash(), false });
-    treeHash = cur.getHash();
+    cur.updateEntry(path, Tree::Node { tree.hash(), false });
+    treeHash = cur.hash();
     store();
 }
 
 void Index::updateEntry(const fs::path &path, const Blob &blob) {
     Tree cur = getTree();
-    cur.updateEntry(path, Tree::Node { blob.getHash(), true });
-    treeHash = cur.getHash();
+    cur.updateEntry(path, Tree::Node { blob.hash(), true });
+    treeHash = cur.hash();
     store();
 }
 
 void Index::deleteEntry(const fs::path &path) {
     Tree tree = getTree();
     tree.deleteEntry(path);
-    treeHash = tree.getHash();
+    treeHash = tree.hash();
     store();
 }
 

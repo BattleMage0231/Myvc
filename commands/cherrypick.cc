@@ -36,24 +36,24 @@ void Cherrypick::process() {
         }
     }
     Index index = resolveIndex();
-    index.updateTree(store->getWorkingTree().getHash());
+    index.updateTree(store->getWorkingTree().hash());
     TreeDiff diff = Tree::diff(index.getTree(), (*head).getTree());
     if(diff.getChanges().empty()) {
         std::cout << "Would have no effect." << std::endl;
         return;
     } else if(res.second.deleteConflicts.empty() && res.second.modifyConflicts.empty()) {
-        std::set<Hash> parents = {head.getCommit().getHash(), c.getHash()};
-        myvc::Commit c { parents, index.getTree().getHash(), std::time(nullptr), "Cherry-pick commit", store };
+        std::set<Hash> parents = {head.getCommit().hash(), c.hash()};
+        myvc::Commit c { parents, index.getTree().hash(), std::time(nullptr), "Cherry-pick commit", store };
         c.store();
         if(head.isBranch()) {
             Branch b = head.getBranch().value();
-            b.setCommit(c.getHash());
+            b.setCommit(c.hash());
             b.store();
         } else {
-            head.setState(c);
+            head.setState(c.hash());
             head.store();
         }
-        index.reset(index.getTree().getHash());
+        index.reset(index.getTree().hash());
     } else {
         auto conflicts = res.second;
         const auto &changes1 = diff1.getChanges(), &changes2 = diff2.getChanges();

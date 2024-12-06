@@ -38,7 +38,7 @@ void Branch::process() {
         if(store->getBranch(name)) {
             throw command_error {"branch " + name + " already exists"};
         }
-        myvc::Branch b {name, (*resolveHead()).getHash(), store};
+        myvc::Branch b {name, (*resolveHead()).hash(), store};
         store->updateBranch(b);
     } else {
         throw command_error {"too many arguments"};

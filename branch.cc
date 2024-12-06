@@ -13,12 +13,12 @@ Branch::Branch(std::istream &in, std::shared_ptr<Provider> prov) : prov {prov} {
 
 void Branch::write(std::ostream &out) const {
     write_string(out, name);
-    commitHash.write(out);
+    write_hash(out, commitHash);
 }
 
 void Branch::read(std::istream &in) {
     read_string(in, name);
-    commitHash.read(in);
+    read_hash(in, commitHash);
 }
 
 void Branch::reload() {

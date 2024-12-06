@@ -2,7 +2,6 @@
 #include <format>
 #include <vector>
 #include <algorithm>
-#include <cassert>
 #include <bit>
 #include "hash.h"
 #include "serialize.h"
@@ -17,7 +16,7 @@ struct State {
     uint32_t h[5] = { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0 };
 };
 
-std::vector<uint32_t> preprocess(const std::vector<char> &input) {
+static std::vector<uint32_t> preprocess(const std::vector<char> &input) {
     std::vector<uint8_t> res(input.size());
     std::transform(input.begin(), input.end(), res.begin(), [](char c) { return static_cast<uint8_t>(c); });
     // append 1 bit
@@ -30,7 +29,6 @@ std::vector<uint32_t> preprocess(const std::vector<char> &input) {
     for(size_t i = 0; i < 8; ++i) {
         res.emplace_back(static_cast<uint8_t>((size >> (8 * (7 - i)))));
     }
-    assert(res.size() % 64 == 0);
     // convert to 32-bit blocks
     std::vector<uint32_t> res2(res.size() / 4, 0);
     for(size_t i = 0; i < res.size() / 4; ++i) {
@@ -41,8 +39,7 @@ std::vector<uint32_t> preprocess(const std::vector<char> &input) {
     return res2;
 }
 
-void process_chunk(std::vector<uint32_t> &h, std::vector<uint32_t> chunk) {
-    assert(chunk.size() == 16);
+static void process_chunk(std::vector<uint32_t> &h, std::vector<uint32_t> chunk) {
     // extend chunk
     chunk.resize(80);
     for(size_t i = 16; i < 80; ++i) {
@@ -76,9 +73,8 @@ void process_chunk(std::vector<uint32_t> &h, std::vector<uint32_t> chunk) {
     for(size_t i = 0; i < 5; ++i) h[i] += a[i];
 }
 
-std::vector<char> hash(const std::vector<char> &input) {
+static std::vector<char> hash(const std::vector<char> &input) {
     std::vector<uint32_t> src = preprocess(input);
-    assert(src.size() % 16 == 0);
     // process all chunks
     std::vector<uint32_t> h { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0 };
     for(size_t i = 0; i < src.size(); i += 16) {
@@ -95,28 +91,17 @@ std::vector<char> hash(const std::vector<char> &input) {
             res[4 * i + j] = static_cast<char>(byte);
         }
     }
-    assert(res.size() == 20);
     return res;
 }
 
 SHA1Hash::SHA1Hash() : bytes {} {}
 
-SHA1Hash::SHA1Hash(const Serializable &s) {
-    std::stringstream ss;
-    s.write(ss);
-    std::string str = ss.str();
-    std::vector<char> data {str.begin(), str.end()};
-    std::vector<char> hashed = hash(data);
+SHA1Hash::SHA1Hash(const std::vector<char> &raw) {
+    std::vector<char> hashed = hash(raw);
     for(size_t i = 0; i < 20; ++i) bytes[i] = hashed[i];
 }
 
-SHA1Hash::SHA1Hash(const std::vector<char> &b) {
-    assert(b.size() == 20);
-    for(size_t i = 0; i < 20; ++i) bytes[i] = b[i];
-}
-
-std::vector<char> hexToChars(const std::string &str) {
-    if(str.size() != 40) throw not_implemented {};
+static std::vector<char> hexToChars(const std::string &str) {
     std::stringstream ss {str};
     std::vector<char> res;
     for(size_t i = 0; i < str.size(); i += 2) {
@@ -139,6 +124,7 @@ bool SHA1Hash::operator==(const SHA1Hash &other) const {
     return (*this <=> other) == 0;
 }
 
+/*
 void SHA1Hash::write(std::ostream &out) const {
     out.write(bytes, sizeof(bytes));
 }
@@ -146,13 +132,16 @@ void SHA1Hash::write(std::ostream &out) const {
 void SHA1Hash::read(std::istream &in) {
     in.read(bytes, 20 * sizeof(char));
 }
+*/
 
 SHA1Hash::operator std::string() const {
+    if(cachedHex) return cachedHex.value();
     std::stringstream ss;
     for(char c : bytes) {
         ss << std::format("{:02x}", static_cast<unsigned char>(c));
     }
-    return ss.str();
+    cachedHex = ss.str();
+    return cachedHex.value();
 }
 
 std::ostream &myvc::operator<<(std::ostream &out, const SHA1Hash &hash) {

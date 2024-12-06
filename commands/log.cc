@@ -29,7 +29,7 @@ void Log::process() {
         if(commits.size() > n) commits.resize(n);
     }
     for(const Commit &c : commits) {
-        std::cout << "commit " << c.getHash() << std::endl;
+        std::cout << "commit " << c.hash() << std::endl;
         std::cout << "Date:    " << c.getTime() << std::endl;
         std::cout << "Message: " << c.getMsg() << std::endl;
         std::cout << std::endl;

@@ -10,18 +10,18 @@ std::optional<Commit> Commit::getLCA(const Commit &a, const Commit &b) {
     std::set<Hash> aPool, bPool;
     std::vector<Commit> aCur {a}, bCur {b};
     while(!aCur.empty() || !bCur.empty()) {
-        for(const auto &c : aCur) aPool.insert(c.getHash());
-        for(const auto &c : bCur) bPool.insert(c.getHash());
+        for(const auto &c : aCur) aPool.insert(c.hash());
+        for(const auto &c : bCur) bPool.insert(c.hash());
         // check intersections
         std::set<Hash> sect;
         std::set_intersection(aPool.begin(), aPool.end(), bPool.begin(), bPool.end(), std::inserter(sect, sect.begin()));
         if(!sect.empty()) {
             Hash first = *sect.begin();
             for(const auto &c : aCur) {
-                if(c.getHash() == first) return c;
+                if(c.hash() == first) return c;
             }
             for(const auto &c : bCur) {
-                if(c.getHash() == first) return c;
+                if(c.hash() == first) return c;
             }
             throw not_implemented {};
         }
@@ -59,8 +59,8 @@ Commit::Commit(std::istream &in, std::shared_ptr<Provider> prov) : prov {prov} {
 
 void Commit::write(std::ostream &out) const {
     write_raw(out, parentHashes.size());
-    for(const auto &h : parentHashes) h.write(out);
-    treeHash.write(out);
+    for(const auto &h : parentHashes) write_hash(out, h);
+    write_hash(out, treeHash);
     write_raw(out, time);
     write_string(out, msg);
 }
@@ -71,10 +71,10 @@ void Commit::read(std::istream &in) {
     parentHashes.clear();
     for(size_t i = 0; i < sz; ++i) {
         Hash h;
-        h.read(in);
+        read_hash(in, h);
         parentHashes.insert(std::move(h));
     }
-    treeHash.read(in);
+    read_hash(in, treeHash);
     read_raw(in, time);
     read_string(in, msg);
 }

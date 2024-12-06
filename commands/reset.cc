@@ -29,15 +29,15 @@ void Reset::process() {
     if(store->getBranch(args.at(0))) {
         head.setState(args.at(0));
     } else {
-        head.setState(resolveSymbol(args.at(0)).getHash());
+        head.setState(resolveSymbol(args.at(0)).hash());
     }
     head.store();
     // reset index
     Index index = resolveIndex();
     if(mixed || hard) {
-        index.reset((*head).getHash());
+        index.reset((*head).hash());
     } else {
-        index.updateBase((*head).getHash());
+        index.updateBase((*head).hash());
     }
     // reset working directory
     if(hard) {

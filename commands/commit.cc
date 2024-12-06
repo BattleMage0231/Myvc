@@ -5,6 +5,7 @@
 #include <ctime>
 #include <fstream>
 #include "commit.h"
+#include "../serialize.h"
 
 using namespace myvc::commands;
 
@@ -22,7 +23,7 @@ void Commit::createRules() {
 
 void Commit::process() {
     Index index = resolveIndex();
-    if(index.getTree().getHash() == index.getBase().getHash()) {
+    if(index.getTree().hash() == index.getBase().hash()) {
         std::cout << "No changes to commit" << std::endl;
     } else {
         std::string msg;
@@ -37,30 +38,30 @@ void Commit::process() {
         time_t time = std::time(nullptr);
         auto head = store->getHead();
         std::set<Hash> parents;
-        if(head) parents.insert(head.value().getCommit().getHash());
+        if(head) parents.insert(head.value().getCommit().hash());
         if(fs::exists(".myvc/MERGE_INFO")) {
             std::ifstream in {".myvc/MERGE_INFO"};
             Hash h;
-            h.read(in);
+            read_hash(in, h);
             parents.insert(h);
             fs::remove(".myvc/MERGE_INFO");
         }
-        myvc::Commit c { parents, index.getTree().getHash(), time, msg, store };
+        myvc::Commit c { parents, index.getTree().hash(), time, msg, store };
         c.store();
         if(head && head.value().isBranch()) {
             Branch b = head.value().getBranch().value();
-            b.setCommit(c.getHash());
+            b.setCommit(c.hash());
             b.store();
         } else if(head) {
             Head headVal = head.value();
-            headVal.setState(c);
+            headVal.setState(c.hash());
             headVal.store();
         } else {
-            Branch main {"main", c.getHash(), store};
+            Branch main {"main", c.hash(), store};
             main.store();
             Head newHead {main.getName(), store};
             newHead.store();
         }
-        index.reset(index.getTree().getHash());
+        index.reset(index.getTree().hash());
     }
 }

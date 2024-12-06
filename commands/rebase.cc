@@ -42,8 +42,8 @@ void Rebase::process() {
         }
         Hash start, cur;
         std::ifstream in {".myvc/REBASE_INFO", std::ios::binary};
-        start.read(in);
-        cur.read(in);
+        read_hash(in, start);
+        read_hash(in, cur);
         rebase_from(store->getCommit(start).value(), store->getCommit(cur).value());
         return;
     }

@@ -20,7 +20,7 @@ void Status::process() {
         if(headVal.isBranch()) {
             std::cout << "On branch " << headVal.getBranch().value().getName() << std::endl;
         } else {
-            std::cout << "HEAD detached at " << (*headVal).getHash() << std::endl;
+            std::cout << "HEAD detached at " << (*headVal).hash() << std::endl;
         }
     } else {
         std::cout << "No commits yet" << std::endl;

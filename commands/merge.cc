@@ -42,10 +42,10 @@ void Merge::process() {
         std::cout << "Fast forwarding..." << std::endl;
         if(head.getBranch()) {
             Branch b = head.getBranch().value();
-            b.setCommit(c);
+            b.setCommit(c.hash());
             b.store();
         } else {
-            head.setState(c);
+            head.setState(c.hash());
             head.store();
         }
         store->setWorkingTree(c.getTree());
@@ -63,20 +63,20 @@ void Merge::process() {
             }
         }
         Index index = resolveIndex();
-        index.updateTree(store->getWorkingTree().getHash());
+        index.updateTree(store->getWorkingTree().hash());
         if(res.second.deleteConflicts.empty() && res.second.modifyConflicts.empty()) {
-            std::set<Hash> parents = {head.getCommit().getHash(), c.getHash()};
-            myvc::Commit c { parents, index.getTree().getHash(), std::time(nullptr), "Merge commit", store };
+            std::set<Hash> parents = {head.getCommit().hash(), c.hash()};
+            myvc::Commit c { parents, index.getTree().hash(), std::time(nullptr), "Merge commit", store };
             c.store();
             if(head.isBranch()) {
                 Branch b = head.getBranch().value();
-                b.setCommit(c.getHash());
+                b.setCommit(c.hash());
                 b.store();
             } else {
-                head.setState(c);
+                head.setState(c.hash());
                 head.store();
             }
-            index.reset(index.getTree().getHash());
+            index.reset(index.getTree().hash());
         } else {
             auto conflicts = res.second;
             const auto &changes1 = diff1.getChanges(), &changes2 = diff2.getChanges();
@@ -120,7 +120,7 @@ void Merge::process() {
                 std::cout << "CONFLICT: " << path << " (conflict markers inserted)" << std::endl;
             }
             std::ofstream out {".myvc/MERGE_INFO"};
-            c.getHash().write(out);
+            write_hash(out, c.hash());
             std::cout << "Merge conflict(s) detected." << std::endl;
         }
     }

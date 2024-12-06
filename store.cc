@@ -59,7 +59,7 @@ std::optional<Commit> RepositoryStore::getCommit(Hash h) const {
 }
 
 void RepositoryStore::createCommit(const Commit &c) {
-    store(getObjectPath(c.getHash()), c);
+    store(getObjectPath(c.hash()), c);
 }
 
 std::optional<Tree> RepositoryStore::getTree(Hash h) const {
@@ -67,7 +67,7 @@ std::optional<Tree> RepositoryStore::getTree(Hash h) const {
 }
 
 void RepositoryStore::createTree(const Tree &c) {
-    store(getObjectPath(c.getHash()), c);
+    store(getObjectPath(c.hash()), c);
 }
 
 std::optional<Blob> RepositoryStore::getBlob(Hash h) const {
@@ -75,7 +75,7 @@ std::optional<Blob> RepositoryStore::getBlob(Hash h) const {
 }
 
 void RepositoryStore::createBlob(const Blob &c) {
-    store(getObjectPath(c.getHash()), c);
+    store(getObjectPath(c.hash()), c);
 }
 
 std::optional<Branch> RepositoryStore::getBranch(const std::string &name) const {
@@ -134,9 +134,9 @@ Tree RepositoryStore::getTreeAt(const fs::path &path) {
         if(entry.path().filename() == ".myvc") continue;
         if(entry.is_directory()) {
             Tree child = getTreeAt(entry.path());
-            if(!child.getNodes().empty()) nodes[entry.path().filename()] = Tree::Node {child.getHash(), false};
+            if(!child.getNodes().empty()) nodes[entry.path().filename()] = Tree::Node {child.hash(), false};
         } else { 
-            nodes[entry.path().filename()] = Tree::Node {getBlobAt(entry.path()).getHash(), true};
+            nodes[entry.path().filename()] = Tree::Node {getBlobAt(entry.path()).hash(), true};
         }
     }
     Tree t {nodes, getInstance()};

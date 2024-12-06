@@ -82,7 +82,7 @@ Index Command::resolveIndex() {
     else {
         Tree t {{}, store};
         t.store();
-        Index index {t.getHash(), t.getHash(), store};
+        Index index {t.hash(), t.hash(), store};
         index.store();
         return index;
     }

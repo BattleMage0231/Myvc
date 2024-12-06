@@ -17,12 +17,12 @@ Tree::Node::Node(std::istream &in, std::weak_ptr<Provider> prov) : prov {prov} {
 
 void Tree::Node::write(std::ostream &out) const {
     write_raw(out, blob);
-    dataHash.write(out);
+    write_hash(out, dataHash);
 }
 
 void Tree::Node::read(std::istream &in) {
     read_raw(in, blob);
-    dataHash.read(in);
+    read_hash(in, dataHash);
 }
 
 bool Tree::Node::isBlob() const {
@@ -147,7 +147,7 @@ void Tree::updateEntry(const fs::path &path, Node node) {
             t = std::get<Tree>(nodes[base].getData());
         }
         t.updateEntry(tail, std::move(node));
-        nodes[base].setTree(t.getHash());
+        nodes[base].setTree(t.hash());
     }
     store();
 }
@@ -164,7 +164,7 @@ void Tree::deleteEntry(const fs::path &path) {
         if(t.nodes.empty()) {
             nodes.erase(base);
         } else {
-            nodes[base].setTree(t.getHash());
+            nodes[base].setTree(t.hash());
         }
     }
     store();

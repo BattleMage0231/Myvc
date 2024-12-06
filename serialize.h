@@ -1,9 +1,8 @@
 #pragma once
 
 #include <iostream>
-#include <map>
-#include <vector>
 #include <string>
+#include "hash.h"
 
 namespace myvc {
 
@@ -12,31 +11,26 @@ public:
     virtual void write(std::ostream &) const = 0;
     virtual void read(std::istream &) = 0;
 
+    virtual Hash hash() const;
+    operator myvc::Hash() const;
+
     virtual ~Serializable() {}
 };
 
-template<typename T> inline void write_raw(std::ostream &out, const T &v) {
+template<typename T> void write_raw(std::ostream &out, const T &v) {
     const char *bytes = reinterpret_cast<const char *>(&v);
     out.write(bytes, sizeof(v));
 }
 
-template<typename T> inline void read_raw(std::istream &in, T &v) {
+template<typename T> void read_raw(std::istream &in, T &v) {
     char buf[sizeof(T)];
     in.read(buf, sizeof(T));
     v = *reinterpret_cast<T *>(buf);
 }
 
-inline void write_string(std::ostream &out, const std::string &str) {
-    write_raw(out, str.size());
-    out.write(str.c_str(), str.size());
-}
-
-inline void read_string(std::istream &in, std::string &str) {
-    size_t sz;
-    read_raw(in, sz);
-    char buf[sz];
-    in.read(buf, sz * sizeof(char));
-    str = std::string {buf, sz};
-}
+void write_string(std::ostream &, const std::string &);
+void read_string(std::istream &, std::string &);
+void write_hash(std::ostream &, const Hash &);
+void read_hash(std::istream &, Hash &);
 
 }

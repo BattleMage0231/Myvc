@@ -19,7 +19,7 @@ void Checkout::process() {
     Index index = resolveIndex();
     Head head = resolveHead();
     Branch b = resolveBranch(args.at(0));
-    index.reset((*b).getTree());
+    index.reset((*b).getTree().hash());
     head.setState(b.getName());
     head.store();
     store->setWorkingTree((*head).getTree());
