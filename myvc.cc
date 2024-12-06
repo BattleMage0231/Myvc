@@ -2,6 +2,10 @@
 #include <memory>
 #include <iostream>
 #include <stdexcept>
+
+#include "store.h"
+
+/*
 #include "commands/command.h"
 #include "commands/init.h"
 #include "commands/log.h"
@@ -17,9 +21,11 @@
 #include "commands/merge.h"
 #include "commands/cherrypick.h"
 #include "commands/rebase.h"
+*/
 
-using namespace myvc::commands;
+//using namespace myvc::commands;
 
+/*
 std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
     if(args.size() == 0) return {};
     fs::path cur = fs::current_path();
@@ -57,8 +63,11 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return {};
     }
 }
+*/
 
 int main(int argc, char *argv[]) {
+    myvc::RepositoryStore r {"."};
+    /*
     std::vector<std::string> args {argv + 1, argv + argc};
     std::unique_ptr<Command> cmd = createCommand(args);
     if(cmd) {
@@ -75,4 +84,5 @@ int main(int argc, char *argv[]) {
         std::cerr << "usage: myvc subcommand" << std::endl;
     }
     return 0;
+    */
 }

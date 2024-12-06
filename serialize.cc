@@ -37,3 +37,11 @@ void myvc::read_hash(std::istream &in, Hash &hash) {
     read_string(in, hex);
     hash = Hash {hex};
 }
+
+void myvc::write_object(std::ostream &out, const Serializable &o) {
+    o.write(out);
+}
+
+void myvc::read_object(std::istream &in, Serializable &o) {
+    o.read(in);
+}

@@ -50,8 +50,8 @@ std::vector<Commit> Commit::getAllReachable(const Commit &c) {
     return res;
 }
 
-Commit::Commit(std::set<Hash> parentHashes, Hash treeHash, time_t time, std::string msg, std::shared_ptr<Provider> prov)
-    : parentHashes {std::move(parentHashes)}, treeHash {treeHash}, time {time}, msg {std::move(msg)}, prov {std::move(prov)} {}
+Commit::Commit(std::set<Hash> parentHashes, Hash treeHash, time_t time, std::string msg, std::weak_ptr<Provider> prov)
+    : parentHashes {std::move(parentHashes)}, treeHash {std::move(treeHash)}, time {time}, msg {std::move(msg)}, prov {std::move(prov)} {}
 
 void Commit::write(std::ostream &out) const {
     write_raw(out, parentHashes.size());
@@ -75,18 +75,10 @@ void Commit::read(std::istream &in) {
     read_string(in, msg);
 }
 
-void Commit::store() {
-    prov->createCommit(*this);
-}
-
 std::vector<Commit> Commit::getParents() const {
     std::vector<Commit> commits;
-    for(const auto &h : parentHashes) commits.emplace_back(prov->getCommit(h).value());
+    for(const auto &h : parentHashes) commits.emplace_back(prov.lock()->getCommit(h).value());
     return commits;
-}
-
-std::set<Hash> &Commit::getParentHashes() {
-    return parentHashes;
 }
 
 const std::set<Hash> &Commit::getParentHashes() const {
@@ -94,27 +86,15 @@ const std::set<Hash> &Commit::getParentHashes() const {
 }
 
 Tree Commit::getTree() const {
-    return prov->getTree(treeHash).value();
-}
-
-void Commit::setTree(Hash hash) {
-    treeHash = hash;
+    return prov.lock()->getTree(treeHash).value();
 }
 
 time_t Commit::getTime() const {
     return time;
 }
 
-void Commit::setTime(time_t time) {
-    this->time = time;
-}
-
 const std::string &Commit::getMsg() const {
     return msg;
-}
-
-void Commit::setMsg(std::string str) {
-    msg = std::move(str);
 }
 
 bool Commit::hasParent(const Commit &c) const {
@@ -125,6 +105,6 @@ bool Commit::hasParent(const Commit &c) const {
     return false;
 }
 
-void Commit::setProvider(std::shared_ptr<Provider> prov) {
+void Commit::setProvider(std::weak_ptr<Provider> prov) {
     this->prov = std::move(prov);
 }

@@ -2,14 +2,14 @@
 
 using namespace myvc;
 
-Head::Head(std::variant<std::string, Hash> state, std::shared_ptr<Provider> prov)
+Head::Head(std::variant<std::monostate, std::string, Hash> state, std::weak_ptr<Provider> prov)
     : state {std::move(state)}, prov {std::move(prov)} {}
 
 void Head::write(std::ostream &out) const {
-    if(isBranch()) {
+    if(std::holds_alternative<std::string>(state)) {
         write_raw(out, true);
         write_string(out, std::get<std::string>(state));
-    } else{
+    } else if(std::holds_alternative<Hash>(state)) {
         write_raw(out, false);
         write_hash(out, std::get<Hash>(state));
     }
@@ -29,43 +29,35 @@ void Head::read(std::istream &in) {
     }
 }
 
-void Head::reload() {
-    *this = prov->getHead().value();
+bool Head::hasState() const {
+    return !std::holds_alternative<std::monostate>(state);
 }
 
-void Head::store() {
-    prov->updateHead(*this);
-}
-
-bool Head::isBranch() const {
-    return std::holds_alternative<std::string>(state);
-}
-
-std::optional<Branch> Head::getBranch() const {
-    if(isBranch()) {
-        return prov->getBranch(std::get<std::string>(state)).value();
+std::variant<const std::reference_wrapper<Branch>, Commit> Head::get() const {
+    if(std::holds_alternative<std::string>(state)) {
+        return prov.lock()->getBranch(std::get<std::string>(state)).value();
     } else {
-        return {};
+        return prov.lock()->getCommit(std::get<Hash>(state)).value();
     }
 }
 
 Commit Head::getCommit() const {
-    auto branch = getBranch();
-    if(branch) {
-        return *(branch.value());
+    auto val = get();
+    if(std::holds_alternative<const std::reference_wrapper<Branch>>(val)) {
+        return std::get<const std::reference_wrapper<Branch>>(val).get().getCommit();
     } else {
-        return prov->getCommit(std::get<Hash>(state)).value();
+        return std::get<Commit>(val);
     }
 }
 
-Commit Head::operator*() const {
-    return getCommit();
+void Head::setBranch(std::string branch) {
+    this->state = std::move(branch);
 }
 
-void Head::setState(std::variant<std::string, Hash> state) {
-    this->state = std::move(state);
+void Head::setCommit(Hash commitHash) {
+    this->state = std::move(commitHash);
 }
 
-void Head::setProvider(std::shared_ptr<Provider> prov) {
+void Head::setProvider(std::weak_ptr<Provider> prov) {
     this->prov = std::move(prov);
 }

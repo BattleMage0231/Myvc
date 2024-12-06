@@ -9,6 +9,7 @@
 #include <optional>
 #include <vector>
 #include <filesystem>
+#include <functional>
 #include "object.h"
 #include "hash.h"
 #include "blob.h"
@@ -22,9 +23,8 @@ class Tree : public Object {
 public:
     class Provider {
     public:
-        virtual std::optional<Blob> getBlob(Hash) const = 0;
-        virtual std::optional<Tree> getTree(Hash) const = 0;
-        virtual void createTree(const Tree &) = 0;
+        virtual std::optional<Blob> getBlob(const Hash &) const = 0;
+        virtual std::optional<Tree> getTree(const Hash &) const = 0;
         virtual ~Provider() {};
     };
 
@@ -40,37 +40,31 @@ public:
         void write(std::ostream &) const override;
         void read(std::istream &) override;
 
-        bool isBlob() const;
         std::variant<Tree, Blob> getData() const;
-        std::variant<Tree, Blob> operator*() const;
-        void setBlob(Hash);
-        void setTree(Hash);
         void setProvider(std::weak_ptr<Provider>);
     };
 
 private:
     std::map<std::string, Node> nodes;
-    std::shared_ptr<Provider> prov;
+    std::weak_ptr<Provider> prov;
 
 public:
     using Iterator = std::map<std::string, Node>::const_iterator;
 
     static TreeDiff diff(const Tree &, const Tree &);
 
-    explicit Tree(std::map<std::string, Node> nodes = {}, std::shared_ptr<Provider> prov = {});
+    explicit Tree(std::map<std::string, Node> nodes = {}, std::weak_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
-    void store() override;
 
-    std::map<std::string, Node> &getNodes();
     const std::map<std::string, Node> &getNodes() const;
     std::map<fs::path, Blob> getAllFiles() const;
     std::optional<std::variant<Tree, Blob>> getAtPath(const fs::path &) const;
-    void setProvider(std::shared_ptr<Provider>);
+    void setProvider(std::weak_ptr<Provider>);
 
-    void updateEntry(const fs::path &, Node);
-    void deleteEntry(const fs::path &);
+    //void updateEntry(const fs::path &, Node);
+    //void deleteEntry(const fs::path &);
 
     Iterator begin() const;
     Iterator end() const;

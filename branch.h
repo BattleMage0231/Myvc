@@ -6,41 +6,36 @@
 #include <string>
 #include <ctime>
 #include <optional>
-#include "stored.h"
+#include <functional>
+#include "serialize.h"
 #include "hash.h"
 #include "commit.h"
 
 namespace myvc {
 
-class Branch : public Stored {
+class Branch : public Serializable {
 public:
     class Provider {
     public:
-        virtual std::optional<Branch> getBranch(const std::string &) const = 0;
-        virtual void updateBranch(const Branch &) = 0;
-        virtual std::optional<Commit> getCommit(Hash) const = 0;
+        virtual std::optional<Commit> getCommit(const Hash &) const = 0;
         virtual ~Provider() {};
     };
 
 private:
     std::string name;
     Hash commitHash;
-    std::shared_ptr<Provider> prov;
+    std::weak_ptr<Provider> prov;
 
 public:
-    explicit Branch(std::string name = {}, Hash commitHash = {}, std::shared_ptr<Provider> prov = {});
+    explicit Branch(std::string name = {}, Hash commitHash = {}, std::weak_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
-    void reload() override;
-    void store() override;
 
     const std::string &getName() const;
-    void setName(std::string);
     Commit getCommit() const;
     void setCommit(Hash);
-    Commit operator*() const;
-    void setProvider(std::shared_ptr<Provider>);
+    void setProvider(std::weak_ptr<Provider>);
 };
 
 }

@@ -1,17 +1,14 @@
 #pragma once
 
 #include <optional>
-#include "stored.h"
-#include "hash.h"
+#include "serialize.h"
 
 namespace myvc {
 
-class Object : public Stored {
+class Object : public Serializable {
     mutable std::optional<Hash> cachedHash;
 
 public:
-    void reload() override {}
-
     Hash hash() const override {
         if(cachedHash) return cachedHash.value();
         cachedHash = Serializable::hash();

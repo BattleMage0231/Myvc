@@ -1,5 +1,6 @@
 #include <fstream>
 #include <memory>
+#include <concepts>
 #include "store.h"
 #include "errors.h"
 #include "hash.h"
@@ -7,20 +8,30 @@
 using namespace myvc;
 
 bool RepositoryStore::createAt(const fs::path &path) {
-    if(fs::exists(path / ".myvc")) return false;
-    fs::create_directory(path / ".myvc");
+    if(fs::exists(path / myvcName)) return false;
+    fs::create_directory(path / myvcName);
     return true;
 }
 
-std::shared_ptr<RepositoryStore> RepositoryStore::getInstance() const {
-    return std::make_shared<RepositoryStore>(*this);
+RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {
+    if(!fs::exists(getMyvcPath())) {
+        throw not_found {".myvc directory"};
+    }
+}
+
+std::weak_ptr<RepositoryStore> RepositoryStore::getInstance() const {
+    try {
+        return std::const_pointer_cast<RepositoryStore>(shared_from_this());
+    } catch(...) {
+        return std::shared_ptr<RepositoryStore>(const_cast<RepositoryStore *>(this), [](auto *) {});
+    }
 }
 
 fs::path RepositoryStore::getMyvcPath() const {
-    return path / ".myvc";
+    return path / myvcName;
 }
 
-fs::path RepositoryStore::getObjectPath(Hash h) const {
+fs::path RepositoryStore::getObjectPath(const Hash &h) const {
     return getMyvcPath() / "objects" / static_cast<std::string>(h);
 }
 
@@ -36,18 +47,16 @@ fs::path RepositoryStore::getIndexPath() const {
     return getMyvcPath() / "index";
 }
 
-RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {
-    if(!fs::exists(getMyvcPath())) {
-        throw not_found {".myvc directory"};
-    }
-}
+template<typename T> concept HasProvider = requires(T t, std::weak_ptr<typename T::Provider> provider) {
+    t.setProvider(provider);
+};
 
 template<typename T> std::optional<T> RepositoryStore::load(const fs::path &path) const {
     std::ifstream in {path, std::ios::binary};
     if(!in) return {};
     T t;
     t.read(in);
-    t.setProvider(getInstance());
+    if constexpr(HasProvider<T>) t.setProvider(getInstance());
     return t;
 }
 
@@ -57,102 +66,147 @@ void RepositoryStore::store(const fs::path &path, const Serializable &s) {
     s.write(out);
 }
 
-std::optional<Commit> RepositoryStore::getCommit(Hash h) const {
-    return load<Commit>(getObjectPath(h));
-}
-
-void RepositoryStore::createCommit(const Commit &c) {
-    store(getObjectPath(c.hash()), c);
-}
-
-std::optional<Tree> RepositoryStore::getTree(Hash h) const {
-    return load<Tree>(getObjectPath(h));
-}
-
-void RepositoryStore::createTree(const Tree &c) {
-    store(getObjectPath(c.hash()), c);
-}
-
-std::optional<Blob> RepositoryStore::getBlob(Hash h) const {
-    return load<Blob>(getObjectPath(h));
-}
-
-void RepositoryStore::createBlob(const Blob &c) {
-    store(getObjectPath(c.hash()), c);
-}
-
-std::optional<Branch> RepositoryStore::getBranch(const std::string &name) const {
-    return load<Branch>(getBranchPath(name));
-}
-
-std::vector<Branch> RepositoryStore::getAllBranches() const {
-    std::vector<Branch> res;
-    for(const auto &entry : fs::directory_iterator(getMyvcPath() / "refs")) {
-        res.emplace_back(load<Branch>(entry.path()).value());
+template<typename T> bool RepositoryStore::createObject(const T &o) {
+    Hash h = o.hash();
+    if(objects.find(o) == objects.end()) {
+        auto ptr = std::make_unique<T>(o);
+        if constexpr(HasProvider<T>) ptr->setProvider(getInstance());
+        objects.insert_or_assign(h, std::move(ptr)); 
+        return true;
     }
-    return res;
+    return false;
 }
 
-void RepositoryStore::deleteBranch(const std::string &name) {
-    fs::remove(getBranchPath(name));
+template<typename T> std::optional<T> RepositoryStore::loadObject(const Hash &h) const {
+    if(objects.find(h) != objects.end()) return static_cast<T &>(*objects.at(h));
+    auto val = load<T>(getObjectPath(h));
+    if(!val) return {};
+    objects.at(h) = std::make_unique<T>(std::move(val.value()));
+    return static_cast<T &>(*objects.at(h));
 }
 
-void RepositoryStore::updateBranch(const Branch &branch) {
-    store(getBranchPath(branch.getName()), branch);
+bool RepositoryStore::createCommit(const Commit &c) {
+    return createObject<Commit>(c);
 }
 
-std::optional<Head> RepositoryStore::getHead() const {
-    return load<Head>(getHeadPath());
+bool RepositoryStore::createTree(const Tree &c) {
+    return createObject<Tree>(c);
 }
 
-void RepositoryStore::updateHead(const Head &h) {
-    store(getHeadPath(), h);
+bool RepositoryStore::createBlob(const Blob &c) {
+    return createObject<Blob>(c);
 }
 
-std::optional<Index> RepositoryStore::getIndex() const {
-    return load<Index>(getIndexPath());
+bool RepositoryStore::createBranch(std::string name, Hash commitHash) {
+    if(branches.find(name) == branches.end()) {
+        branches.insert_or_assign(name, Branch { name, std::move(commitHash), getInstance() });
+        return true;
+    }
+    return false;
 }
 
-void RepositoryStore::updateIndex(const Index &i) {
-    store(getIndexPath(), i);
+std::optional<Commit> RepositoryStore::getCommit(const Hash &h) const {
+    return loadObject<Commit>(h);
 }
 
-Blob RepositoryStore::getBlobAt(const fs::path &path) {
-    Blob b {std::vector<char> {}, getInstance()};
-    auto &vec = b.getData();
+std::optional<Tree> RepositoryStore::getTree(const Hash &h) const {
+    return loadObject<Tree>(h);
+}
+
+std::optional<Blob> RepositoryStore::getBlob(const Hash &h) const {
+    return loadObject<Blob>(h);
+}
+
+std::optional<std::reference_wrapper<Branch>> RepositoryStore::getBranch(const std::string &name) {
+    if(branches.find(name) != branches.end()) return branches.at(name);
+    auto val = load<Branch>(getBranchPath(name));
+    if(!val) return {};
+    branches.at(name) = std::move(val.value());
+    return branches.at(name);
+}
+
+std::optional<const std::reference_wrapper<Branch>> RepositoryStore::getBranch(const std::string &name) const {
+    auto res = const_cast<RepositoryStore &>(*this).getBranch(name);
+    if(res) return res.value();
+    else return {};
+}
+
+Index &RepositoryStore::getIndex() {
+    if(index) return index.value();
+    auto val = load<Index>(getIndexPath());
+    if(!val) {
+        index = Index {{}, {}, getInstance()};
+    } else {
+        index = val.value();
+    }
+    return index.value();
+}
+
+Head &RepositoryStore::getHead() {
+    if(head) return head.value();
+    auto val = load<Head>(getHeadPath());
+    if(!val) {
+        head = Head {{}, getInstance()};
+    } else {
+        head = val.value();
+    }
+    return head.value();
+}
+
+bool RepositoryStore::deleteBranch(const Branch &b) {
+    fs::path branchPath = getBranchPath(b.getName());
+    bool deleted = false;
+    if(fs::exists(branchPath)) {
+        fs::remove(branchPath);
+        deleted = true;
+    }
+    if(branches.find(b.getName()) != branches.end()) {
+        branches.erase(b.getName());
+        deleted = true;
+    }
+    return deleted;
+}
+
+std::optional<Blob> RepositoryStore::getBlobAt(const fs::path &path) {
+    std::vector<char> vec;
     std::ifstream in {path, std::ios::binary};
+    if(!in) return {};
     in >> std::noskipws;
     while(in) {
         char c;
         in >> c;
         vec.emplace_back(c);
     }
+    Blob b {vec};
     createBlob(b);
     return b;
 }
 
-Tree RepositoryStore::getTreeAt(const fs::path &path) {
+std::optional<Tree> RepositoryStore::getTreeAt(const fs::path &path) {
     std::map<std::string, Tree::Node> nodes;
+    if(!fs::is_directory(path)) return {};
     for(const auto &entry : fs::directory_iterator(path)) {
         if(entry.path().filename() == ".myvc") continue;
         if(entry.is_directory()) {
-            Tree child = getTreeAt(entry.path());
+            Tree child = getTreeAt(entry.path()).value();
             if(!child.getNodes().empty()) nodes[entry.path().filename()] = Tree::Node {child.hash(), false};
         } else { 
-            nodes[entry.path().filename()] = Tree::Node {getBlobAt(entry.path()).hash(), true};
+            nodes[entry.path().filename()] = Tree::Node {getBlobAt(entry.path()).value().hash(), true};
         }
     }
-    Tree t {nodes, getInstance()};
+    Tree t {std::move(nodes), getInstance()};
     createTree(t);
     return t;
 }
 
 Tree RepositoryStore::getWorkingTree() {
-    return getTreeAt(path);
+    if(workingTree) return getTree(workingTree.value()).value();
+    Tree t = getTreeAt(path).value();
+    workingTree = t.hash();
+    return t;
 }
 
-void RepositoryStore::setWorkingTree(const Tree &tree) {
-    TreeDiff diff = Tree::diff(getWorkingTree(), tree);
+void RepositoryStore::applyOnWorkingTree(const TreeDiff &diff) {
     for(const auto &[path, change] : diff.getChanges()) {
         if(change.type == TreeChange::Type::Add || change.type == TreeChange::Type::Modify) {
             fs::create_directories(path.parent_path());
@@ -165,10 +219,17 @@ void RepositoryStore::setWorkingTree(const Tree &tree) {
             }
         }
     }
+    workingTree = {};
+}
+
+void RepositoryStore::setWorkingTree(const Tree &tree) {
+    TreeDiff diff = Tree::diff(getWorkingTree(), tree);
+    applyOnWorkingTree(diff);
 }
 
 std::optional<Hash> RepositoryStore::resolvePartialObjectHash(const std::string &partial) {
     std::vector<Hash> hashes;
+    if(!fs::exists(getMyvcPath() / "objects")) return {};
     for(const auto &entry : fs::directory_iterator(getMyvcPath() / "objects")) {
         if(entry.is_regular_file()) {
             std::string entryHash = entry.path().filename().string();
@@ -179,5 +240,12 @@ std::optional<Hash> RepositoryStore::resolvePartialObjectHash(const std::string 
         }
     }
     if(hashes.size() != 1) return {};
-    else return hashes[0];
+    else return hashes.at(0);
+}
+
+RepositoryStore::~RepositoryStore() {
+    if(index) store(getIndexPath(), index.value());
+    if(head) store(getHeadPath(), head.value());
+    for(const auto &[h, optr] : objects) store(getObjectPath(h), *optr);
+    for(const auto &[name, b] : branches) store(getBranchPath(name), b);
 }

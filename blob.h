@@ -11,30 +11,18 @@
 namespace myvc {
 
 class Blob : public Object {
-public:
-    class Provider {
-    public:
-        virtual void createBlob(const Blob &) = 0;
-        virtual ~Provider() {};
-    };
-
-private:
     std::vector<char> data;
-    std::shared_ptr<Provider> prov;
 
 public:
     static Diff diff(const Blob &, const Blob &);
 
-    explicit Blob(std::vector<char> data = {}, std::shared_ptr<Provider> prov = {});
-    explicit Blob(const std::vector<std::string> &, std::shared_ptr<Provider> prov = {});
+    explicit Blob(std::vector<char> data = {});
+    explicit Blob(const std::vector<std::string> &);
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
-    void store() override;
 
-    std::vector<char> &getData();
     const std::vector<char> &getData() const;
-    void setProvider(std::shared_ptr<Provider>);
 };
 
 }

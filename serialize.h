@@ -32,5 +32,7 @@ void write_string(std::ostream &, const std::string &);
 void read_string(std::istream &, std::string &);
 void write_hash(std::ostream &, const Hash &);
 void read_hash(std::istream &, Hash &);
+void write_object(std::ostream &, const Serializable &);
+void read_object(std::istream &, Serializable &);
 
 }

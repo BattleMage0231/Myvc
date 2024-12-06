@@ -9,7 +9,7 @@ TreeDiff Tree::diff(const Tree &a, const Tree &b) {
 }
 
 Tree::Node::Node(Hash dataHash, bool blob, std::weak_ptr<Provider> prov)
-    : dataHash {dataHash}, blob {blob}, prov {std::move(prov)} {}
+    : dataHash {std::move(dataHash)}, blob {blob}, prov {std::move(prov)} {}
 
 void Tree::Node::write(std::ostream &out) const {
     write_raw(out, blob);
@@ -21,35 +21,16 @@ void Tree::Node::read(std::istream &in) {
     read_hash(in, dataHash);
 }
 
-bool Tree::Node::isBlob() const {
-    return blob;
-}
-
 std::variant<Tree, Blob> Tree::Node::getData() const {
-    auto p = prov.lock();
-    if(isBlob()) return p->getBlob(dataHash).value();
-    else return p->getTree(dataHash).value();
-}
-
-std::variant<Tree, Blob> Tree::Node::operator*() const {
-    return getData();
-}
-
-void Tree::Node::setBlob(Hash hash) {
-    blob = true;
-    dataHash = hash;
-}
-
-void Tree::Node::setTree(Hash hash) {
-    blob = false;
-    dataHash = hash;
+    if(blob) return prov.lock()->getBlob(dataHash).value();
+    else return prov.lock()->getTree(dataHash).value();
 }
 
 void Tree::Node::setProvider(std::weak_ptr<Provider> prov) {
     this->prov = std::move(prov);
 }
 
-Tree::Tree(std::map<std::string, Node> nodes, std::shared_ptr<Provider> prov)
+Tree::Tree(std::map<std::string, Node> nodes, std::weak_ptr<Provider> prov)
     : nodes {std::move(nodes)}, prov {std::move(prov)}
 {
     for(auto &[k, v] : this->nodes) {
@@ -61,7 +42,7 @@ void Tree::write(std::ostream &out) const {
     write_raw(out, nodes.size());
     for(const auto &[name, node] : nodes) {
         write_string(out, name);
-        node.write(out);
+        write_object(out, node);
     }
 }
 
@@ -73,18 +54,10 @@ void Tree::read(std::istream &in) {
         std::string name;
         read_string(in, name);
         Node n;
-        n.read(in);
+        read_object(in, n);
         n.setProvider(prov);
         nodes.insert_or_assign(std::move(name), std::move(n));
     }
-}
-
-void Tree::store() {
-    prov->createTree(*this);
-}
-
-std::map<std::string, Tree::Node> &Tree::getNodes() {
-    return nodes;
 }
 
 const std::map<std::string, Tree::Node> &Tree::getNodes() const {
@@ -95,10 +68,11 @@ std::map<fs::path, Blob> Tree::getAllFiles() const {
     std::map<fs::path, Blob> files;
     for(const auto &[k, node] : nodes) {
         fs::path base = fs::path {k};
-        if(node.isBlob()) {
-            files.insert_or_assign(base, std::get<Blob>(node.getData()));
+        auto data = node.getData();
+        if(std::holds_alternative<Blob>(data)) {
+            files.insert_or_assign(base, std::get<Blob>(data));
         } else {
-            std::map<fs::path, Blob> children = std::get<Tree>(node.getData()).getAllFiles();
+            auto children = std::get<Tree>(data).getAllFiles();
             for(const auto &[p, blob] : children) {
                 files.insert_or_assign(base / p, blob);
             }
@@ -112,21 +86,23 @@ std::optional<std::variant<Tree, Blob>> Tree::getAtPath(const fs::path &path) co
     fs::path tail = fs::proximate(path, *path.begin());
     if(nodes.find(base) == nodes.end()) return {};
     Node n = nodes.at(base);
+    auto data = n.getData();
     if(tail == ".") {
-        return *n;
+        return data;
     } else {
-        if(n.isBlob()) return {};
-        else return std::get<Tree>(n.getData()).getAtPath(tail);
+        if(std::holds_alternative<Blob>(data)) return {};
+        else return std::get<Tree>(data).getAtPath(tail);
     }
 }
 
-void Tree::setProvider(std::shared_ptr<Provider> prov) {
+void Tree::setProvider(std::weak_ptr<Provider> prov) {
     this->prov = std::move(prov);
     for(auto &[k, v] : nodes) {
         v.setProvider(this->prov);
     }
 }
 
+/*
 void Tree::updateEntry(const fs::path &path, Node node) {
     std::string base = (*path.begin()).string();
     fs::path tail = fs::proximate(path, *path.begin());
@@ -141,7 +117,6 @@ void Tree::updateEntry(const fs::path &path, Node node) {
         t.updateEntry(tail, std::move(node));
         nodes[base].setTree(t.hash());
     }
-    store();
 }
 
 void Tree::deleteEntry(const fs::path &path) {
@@ -159,8 +134,8 @@ void Tree::deleteEntry(const fs::path &path) {
             nodes[base].setTree(t.hash());
         }
     }
-    store();
 }
+*/
 
 Tree::Iterator Tree::begin() const {
     return nodes.begin();

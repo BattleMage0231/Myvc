@@ -3,41 +3,38 @@
 #include <optional>
 #include <variant>
 #include <memory>
-#include "stored.h"
+#include <functional>
+#include "serialize.h"
 #include "commit.h"
 #include "branch.h"
 
 namespace myvc {
 
-class Head : public Stored {
+class Head : public Serializable {
 public:
     class Provider {
     public:
-        virtual std::optional<Head> getHead() const = 0;
-        virtual void updateHead(const Head &) = 0;
-        virtual std::optional<Commit> getCommit(Hash) const = 0;
-        virtual std::optional<Branch> getBranch(const std::string &) const = 0;
+        virtual std::optional<Commit> getCommit(const Hash &) const = 0;
+        virtual std::optional<const std::reference_wrapper<Branch>> getBranch(const std::string &) const = 0;
         virtual ~Provider() {};
     };
 
 private:
-    std::variant<std::string, Hash> state;
-    std::shared_ptr<Provider> prov;
+    std::variant<std::monostate, std::string, Hash> state;
+    std::weak_ptr<Provider> prov;
 
 public:
-    explicit Head(std::variant<std::string, Hash> state = {}, std::shared_ptr<Provider> prov = {});
+    explicit Head(std::variant<std::monostate, std::string, Hash> state = {}, std::weak_ptr<Provider> prov = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;
-    void reload() override;
-    void store() override;
 
-    bool isBranch() const;
-    std::optional<Branch> getBranch() const;
+    bool hasState() const;
+    std::variant<const std::reference_wrapper<Branch>, Commit> get() const;
     Commit getCommit() const;
-    Commit operator*() const;
-    void setState(std::variant<std::string, Hash>);
-    void setProvider(std::shared_ptr<Provider>);
+    void setBranch(std::string);
+    void setCommit(Hash);
+    void setProvider(std::weak_ptr<Provider>);
 };
 
 }

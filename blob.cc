@@ -20,10 +20,10 @@ Diff Blob::diff(const Blob &a, const Blob &b) {
     return Diff {aLines, bLines};
 }
 
-Blob::Blob(std::vector<char> data, std::shared_ptr<Provider> prov) 
-    : data {std::move(data)}, prov {std::move(prov)} {}
+Blob::Blob(std::vector<char> data) 
+    : data {std::move(data)} {}
 
-Blob::Blob(const std::vector<std::string> &lines, std::shared_ptr<Provider> prov) : prov {std::move(prov)} {
+Blob::Blob(const std::vector<std::string> &lines) {
     for(size_t i = 0; i < lines.size(); ++i) {
         if(i != 0) data.push_back('\n');
         data.insert(data.end(), lines[i].begin(), lines[i].end());
@@ -46,19 +46,6 @@ void Blob::read(std::istream &in) {
     }
 }
 
-void Blob::store() {
-    prov->createBlob(*this);
-}
-
-std::vector<char> &Blob::getData() {
-    return data;
-}
-
 const std::vector<char> &Blob::getData() const {
     return data;
 }
-
-void Blob::setProvider(std::shared_ptr<Provider> prov) {
-    this->prov = std::move(prov);
-}
-
