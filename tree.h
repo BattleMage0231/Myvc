@@ -63,9 +63,6 @@ public:
     std::optional<std::variant<Tree, Blob>> getAtPath(const fs::path &) const;
     void setProvider(std::weak_ptr<Provider>);
 
-    //void updateEntry(const fs::path &, Node);
-    //void deleteEntry(const fs::path &);
-
     Iterator begin() const;
     Iterator end() const;
 };

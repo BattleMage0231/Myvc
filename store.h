@@ -13,6 +13,7 @@
 #include "blob.h"
 #include "index.h"
 #include "treediff.h"
+#include "treebuilder.h"
 
 namespace myvc {
 
@@ -20,10 +21,10 @@ namespace fs = std::filesystem;
 
 class RepositoryStore :
     public Commit::Provider,
-    public Tree::Provider,
     public Branch::Provider,
     public Head::Provider,
     public Index::Provider,
+    public TreeBuilder::Provider,
     public std::enable_shared_from_this<RepositoryStore>
 {
     fs::path path;
@@ -34,7 +35,7 @@ class RepositoryStore :
     mutable std::optional<Head> head;
     mutable std::optional<Hash> workingTree;
 
-    std::weak_ptr<RepositoryStore> getInstance() const;
+    std::shared_ptr<RepositoryStore> getInstance() const;
 
     fs::path getMyvcPath() const;
     fs::path getObjectPath(const Hash &) const;
@@ -45,7 +46,7 @@ class RepositoryStore :
     template<typename T> std::optional<T> load(const fs::path &) const;
     void store(const fs::path &, const Serializable &);
 
-    template<typename T> bool createObject(const T &);
+    template<typename T> bool createObject(T &);
     template<typename T> std::optional<T> loadObject(const Hash &) const;
 
 public:
@@ -55,9 +56,9 @@ public:
 
     explicit RepositoryStore(fs::path);
 
-    bool createCommit(const Commit &);
-    bool createTree(const Tree &);
-    bool createBlob(const Blob &);
+    bool createCommit(Commit &);
+    bool createTree(Tree &);
+    bool createBlob(Blob &);
     bool createBranch(std::string, Hash);
 
     std::optional<Commit> getCommit(const Hash &) const;

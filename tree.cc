@@ -102,41 +102,6 @@ void Tree::setProvider(std::weak_ptr<Provider> prov) {
     }
 }
 
-/*
-void Tree::updateEntry(const fs::path &path, Node node) {
-    std::string base = (*path.begin()).string();
-    fs::path tail = fs::proximate(path, *path.begin());
-    node.setProvider(prov);
-    if(tail == ".") {
-        nodes.insert_or_assign(base, std::move(node));
-    } else {
-        Tree t {{}, prov};
-        if(nodes.find(base) != nodes.end()) {
-            t = std::get<Tree>(nodes[base].getData());
-        }
-        t.updateEntry(tail, std::move(node));
-        nodes[base].setTree(t.hash());
-    }
-}
-
-void Tree::deleteEntry(const fs::path &path) {
-    std::string base = (*path.begin()).string();
-    fs::path tail = fs::proximate(path, *path.begin());
-    if(nodes.find(base) == nodes.end()) return;
-    if(tail == ".") {
-        nodes.erase(base);
-    } else {
-        Tree t = std::get<Tree>(nodes[base].getData());
-        t.deleteEntry(tail);
-        if(t.nodes.empty()) {
-            nodes.erase(base);
-        } else {
-            nodes[base].setTree(t.hash());
-        }
-    }
-}
-*/
-
 Tree::Iterator Tree::begin() const {
     return nodes.begin();
 }

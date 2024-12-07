@@ -19,7 +19,7 @@ RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {
     }
 }
 
-std::weak_ptr<RepositoryStore> RepositoryStore::getInstance() const {
+std::shared_ptr<RepositoryStore> RepositoryStore::getInstance() const {
     try {
         return std::const_pointer_cast<RepositoryStore>(shared_from_this());
     } catch(...) {
@@ -66,7 +66,7 @@ void RepositoryStore::store(const fs::path &path, const Serializable &s) {
     s.write(out);
 }
 
-template<typename T> bool RepositoryStore::createObject(const T &o) {
+template<typename T> bool RepositoryStore::createObject(T &o) {
     Hash h = o.hash();
     if(objects.find(o) == objects.end()) {
         auto ptr = std::make_unique<T>(o);
@@ -74,6 +74,7 @@ template<typename T> bool RepositoryStore::createObject(const T &o) {
         objects.insert_or_assign(h, std::move(ptr)); 
         return true;
     }
+    if constexpr(HasProvider<T>) o.setProvider(getInstance());
     return false;
 }
 
@@ -85,15 +86,15 @@ template<typename T> std::optional<T> RepositoryStore::loadObject(const Hash &h)
     return static_cast<T &>(*objects.at(h));
 }
 
-bool RepositoryStore::createCommit(const Commit &c) {
+bool RepositoryStore::createCommit(Commit &c) {
     return createObject<Commit>(c);
 }
 
-bool RepositoryStore::createTree(const Tree &c) {
+bool RepositoryStore::createTree(Tree &c) {
     return createObject<Tree>(c);
 }
 
-bool RepositoryStore::createBlob(const Blob &c) {
+bool RepositoryStore::createBlob(Blob &c) {
     return createObject<Blob>(c);
 }
 
@@ -135,7 +136,9 @@ Index &RepositoryStore::getIndex() {
     if(index) return index.value();
     auto val = load<Index>(getIndexPath());
     if(!val) {
-        index = Index {{}, {}, getInstance()};
+        Tree t;
+        createTree(t);
+        index = Index {t.hash(), getInstance()};
     } else {
         index = val.value();
     }

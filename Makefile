@@ -1,6 +1,6 @@
 CXX = /usr/local/gcc-14.1.0/bin/g++-14.1.0 -std=c++20 -fmodules-ts -Wall -g
 
-myvc: myvc.o serialize.o blob.o branch.o commit.o head.o index.o store.o tree.o diff.o hash.o treediff.o
+myvc: myvc.o serialize.o blob.o branch.o commit.o head.o index.o store.o tree.o diff.o hash.o treediff.o treebuilder.o
 	$(CXX) *.o -o myvc	
 # $(CXX) *.o commands/*.o -o myvc
 
