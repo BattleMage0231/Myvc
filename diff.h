@@ -16,25 +16,20 @@ struct Change {
     bool operator==(const Change &) const = default;
 };
 
-class Hunk {
+struct Hunk {
     size_t index, end;
     std::vector<Change> changes;
 
-public:
     Hunk(size_t, std::vector<Change> changes = {});
 
     std::vector<std::string> getOurs() const;
     std::vector<std::string> getTheirs() const;
 
-    size_t getIndex() const;
-    size_t getEnd() const;
-    const std::vector<Change> &getChanges() const;
-
     auto operator<=>(const Hunk &) const = default;
     bool operator==(const Hunk &) const = default;
 };
 
-class Diff {
+struct Diff {
     std::vector<std::string> base;
     std::vector<Hunk> hunks;
 
