@@ -14,6 +14,7 @@ void Index::read(std::istream &in) {
 }
 
 Tree Index::getTree() const {
+    if(!prov.lock()) THROW("nonexistent provider");
     return prov.lock()->getTree(treeHash).value();
 }
 

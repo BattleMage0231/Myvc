@@ -102,11 +102,16 @@ SHA1Hash::SHA1Hash(const std::vector<char> &raw) {
 }
 
 static std::vector<char> hexToChars(const std::string &str) {
+    if(str.size() != 40) THROW("size must be 40");
     std::stringstream ss {str};
     std::vector<char> res;
     for(size_t i = 0; i < str.size(); i += 2) {
         std::string b = str.substr(i, 2);
-        res.push_back(static_cast<char>(std::stoi(b, nullptr, 16)));
+        try {
+            res.push_back(static_cast<char>(std::stoi(b, nullptr, 16)));
+        } catch(...) {
+            THROW("illegal hex string");
+        }
     }
     return res;
 }
@@ -123,16 +128,6 @@ std::strong_ordering SHA1Hash::operator<=>(const SHA1Hash &other) const {
 bool SHA1Hash::operator==(const SHA1Hash &other) const {
     return (*this <=> other) == 0;
 }
-
-/*
-void SHA1Hash::write(std::ostream &out) const {
-    out.write(bytes, sizeof(bytes));
-}
-
-void SHA1Hash::read(std::istream &in) {
-    in.read(bytes, 20 * sizeof(char));
-}
-*/
 
 SHA1Hash::operator std::string() const {
     if(cachedHex) return cachedHex.value();

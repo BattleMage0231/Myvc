@@ -1,4 +1,5 @@
 #include "head.h"
+#include "errors.h"
 
 using namespace myvc;
 
@@ -34,6 +35,7 @@ bool Head::hasState() const {
 }
 
 std::variant<const std::reference_wrapper<Branch>, Commit> Head::get() const {
+    if(!prov.lock()) THROW("nonexistent provider");
     if(std::holds_alternative<std::string>(state)) {
         return prov.lock()->getBranch(std::get<std::string>(state)).value();
     } else {

@@ -21,6 +21,7 @@ void Tree::Node::read(std::istream &in) {
 }
 
 std::variant<Tree, Blob> Tree::Node::getData() const {
+    if(!prov.lock()) THROW("nonexistent provider");
     if(blob) return prov.lock()->getBlob(dataHash).value();
     else return prov.lock()->getTree(dataHash).value();
 }

@@ -23,7 +23,7 @@ std::optional<Commit> Commit::getLCA(const Commit &a, const Commit &b) {
             for(const auto &c : bCur) {
                 if(c.hash() == first) return c;
             }
-            throw not_implemented {};
+            THROW("impossible");
         }
         // get next list
         std::vector<Commit> aNext, bNext;
@@ -76,6 +76,7 @@ void Commit::read(std::istream &in) {
 }
 
 std::vector<Commit> Commit::getParents() const {
+    if(!prov.lock()) THROW("nonexistent provider");
     std::vector<Commit> commits;
     for(const auto &h : parentHashes) commits.emplace_back(prov.lock()->getCommit(h).value());
     return commits;
@@ -86,6 +87,7 @@ const std::set<Hash> &Commit::getParentHashes() const {
 }
 
 Tree Commit::getTree() const {
+    if(!prov.lock()) THROW("nonexistent provider");
     return prov.lock()->getTree(treeHash).value();
 }
 

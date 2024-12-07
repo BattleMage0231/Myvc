@@ -22,6 +22,7 @@ const std::string &Branch::getName() const {
 }
 
 Commit Branch::getCommit() const {
+    if(!prov.lock()) THROW("nonexistent provider");
     return prov.lock()->getCommit(commitHash).value();
 }
 

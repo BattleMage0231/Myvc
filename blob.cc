@@ -5,7 +5,7 @@
 
 using namespace myvc;
 
-std::vector<std::string> getLines(const std::vector<char> &data) {
+static std::vector<std::string> getLines(const std::vector<char> &data) {
     std::stringstream ss {{ data.begin(), data.end() }};
     std::vector<std::string> res;
     std::string line;

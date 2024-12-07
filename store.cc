@@ -15,7 +15,7 @@ bool RepositoryStore::createAt(const fs::path &path) {
 
 RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {
     if(!fs::exists(getMyvcPath())) {
-        throw not_found {".myvc directory"};
+        THROW(".myvc does not exist");
     }
 }
 

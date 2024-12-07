@@ -83,6 +83,7 @@ std::vector<std::string> Hunk::getTheirs() const {
 }
 
 std::pair<Diff, Diff::Conflicts> Diff::merge(const Diff &a, const Diff &b) {
+    if(a.getBase() != b.getBase()) THROW("different bases");
     std::vector<std::string> base = a.getBase();
     auto aHunks = a.getHunks(), bHunks = b.getHunks();
     auto aIt = aHunks.begin(), bIt = bHunks.begin();
