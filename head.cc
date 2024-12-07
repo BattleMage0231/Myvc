@@ -2,8 +2,8 @@
 
 using namespace myvc;
 
-Head::Head(std::variant<std::monostate, std::string, Hash> state, std::weak_ptr<Provider> prov)
-    : state {std::move(state)}, prov {std::move(prov)} {}
+Head::Head(std::variant<std::monostate, std::string, Hash> state)
+    : state {std::move(state)} {}
 
 void Head::write(std::ostream &out) const {
     if(std::holds_alternative<std::string>(state)) {

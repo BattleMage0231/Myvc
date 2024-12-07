@@ -4,8 +4,8 @@
 
 using namespace myvc;
 
-Branch::Branch(std::string name, Hash commitHash, std::weak_ptr<Provider> prov)
-    : name {std::move(name)}, commitHash {std::move(commitHash)}, prov {std::move(prov)} {}
+Branch::Branch(std::string name, Hash commitHash)
+    : name {std::move(name)}, commitHash {std::move(commitHash)} {}
 
 void Branch::write(std::ostream &out) const {
     write_string(out, name);

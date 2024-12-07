@@ -3,8 +3,7 @@
 
 using namespace myvc;
 
-Index::Index(Hash treeHash, std::weak_ptr<Provider> prov)
-    : treeHash {std::move(treeHash)}, prov {std::move(prov)} {}
+Index::Index(Hash treeHash) : treeHash {std::move(treeHash)} {}
 
 void Index::write(std::ostream &out) const {
     write_hash(out, treeHash);

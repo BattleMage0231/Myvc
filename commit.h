@@ -33,7 +33,7 @@ public:
     static std::optional<Commit> getLCA(const Commit &, const Commit &);
     static std::vector<Commit> getAllReachable(const Commit &);
 
-    explicit Commit(std::set<Hash> parentHashes = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {}, std::weak_ptr<Provider> prov = {});
+    explicit Commit(std::set<Hash> parentHashes = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;

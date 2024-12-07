@@ -50,8 +50,8 @@ std::vector<Commit> Commit::getAllReachable(const Commit &c) {
     return res;
 }
 
-Commit::Commit(std::set<Hash> parentHashes, Hash treeHash, time_t time, std::string msg, std::weak_ptr<Provider> prov)
-    : parentHashes {std::move(parentHashes)}, treeHash {std::move(treeHash)}, time {time}, msg {std::move(msg)}, prov {std::move(prov)} {}
+Commit::Commit(std::set<Hash> parentHashes, Hash treeHash, time_t time, std::string msg)
+    : parentHashes {std::move(parentHashes)}, treeHash {std::move(treeHash)}, time {time}, msg {std::move(msg)} {}
 
 void Commit::write(std::ostream &out) const {
     write_raw(out, parentHashes.size());

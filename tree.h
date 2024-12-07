@@ -35,7 +35,7 @@ public:
         std::weak_ptr<Provider> prov;
 
     public:
-        explicit Node(Hash dataHash = {}, bool blob = false, std::weak_ptr<Provider> prov = {});
+        explicit Node(Hash dataHash = {}, bool blob = false);
 
         void write(std::ostream &) const override;
         void read(std::istream &) override;
@@ -53,7 +53,7 @@ public:
 
     static TreeDiff diff(const Tree &, const Tree &);
 
-    explicit Tree(std::map<std::string, Node> nodes = {}, std::weak_ptr<Provider> prov = {});
+    explicit Tree(std::map<std::string, Node> nodes = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;

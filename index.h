@@ -28,7 +28,7 @@ private:
     std::weak_ptr<Provider> prov;
 
 public:
-    explicit Index(Hash treeHash = {}, std::weak_ptr<Provider> prov = {});
+    explicit Index(Hash treeHash = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;

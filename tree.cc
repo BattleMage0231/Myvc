@@ -8,8 +8,7 @@ TreeDiff Tree::diff(const Tree &a, const Tree &b) {
     return TreeDiff {a.getAllFiles(), b.getAllFiles()};
 }
 
-Tree::Node::Node(Hash dataHash, bool blob, std::weak_ptr<Provider> prov)
-    : dataHash {std::move(dataHash)}, blob {blob}, prov {std::move(prov)} {}
+Tree::Node::Node(Hash dataHash, bool blob) : dataHash {std::move(dataHash)}, blob {blob} {}
 
 void Tree::Node::write(std::ostream &out) const {
     write_raw(out, blob);
@@ -30,13 +29,7 @@ void Tree::Node::setProvider(std::weak_ptr<Provider> prov) {
     this->prov = std::move(prov);
 }
 
-Tree::Tree(std::map<std::string, Node> nodes, std::weak_ptr<Provider> prov)
-    : nodes {std::move(nodes)}, prov {std::move(prov)}
-{
-    for(auto &[k, v] : this->nodes) {
-        v.setProvider(this->prov);
-    }
-}
+Tree::Tree(std::map<std::string, Node> nodes) : nodes {std::move(nodes)} {}
 
 void Tree::write(std::ostream &out) const {
     write_raw(out, nodes.size());

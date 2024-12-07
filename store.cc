@@ -100,7 +100,9 @@ bool RepositoryStore::createBlob(Blob &c) {
 
 bool RepositoryStore::createBranch(std::string name, Hash commitHash) {
     if(branches.find(name) == branches.end()) {
-        branches.insert_or_assign(name, Branch { name, std::move(commitHash), getInstance() });
+        Branch b { name, std::move(commitHash) };
+        b.setProvider(getInstance());
+        branches.insert_or_assign(name, std::move(b));
         return true;
     }
     return false;
@@ -138,7 +140,8 @@ Index &RepositoryStore::getIndex() {
     if(!val) {
         Tree t;
         createTree(t);
-        index = Index {t.hash(), getInstance()};
+        index = Index {t.hash()};
+        index.value().setProvider(getInstance());
     } else {
         index = val.value();
     }
@@ -149,7 +152,8 @@ Head &RepositoryStore::getHead() {
     if(head) return head.value();
     auto val = load<Head>(getHeadPath());
     if(!val) {
-        head = Head {{}, getInstance()};
+        head = Head {};
+        head.value().setProvider(getInstance());
     } else {
         head = val.value();
     }
@@ -168,6 +172,11 @@ bool RepositoryStore::deleteBranch(const Branch &b) {
         deleted = true;
     }
     return deleted;
+}
+
+TreeBuilder RepositoryStore::makeTreeBuilder(Tree t) {
+    t.setProvider(getInstance());
+    return TreeBuilder {getInstance(), t};
 }
 
 std::optional<Blob> RepositoryStore::getBlobAt(const fs::path &path) {
@@ -197,7 +206,7 @@ std::optional<Tree> RepositoryStore::getTreeAt(const fs::path &path) {
             nodes[entry.path().filename()] = Tree::Node {getBlobAt(entry.path()).value().hash(), true};
         }
     }
-    Tree t {std::move(nodes), getInstance()};
+    Tree t {std::move(nodes)};
     createTree(t);
     return t;
 }

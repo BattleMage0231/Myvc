@@ -24,7 +24,7 @@ private:
     std::weak_ptr<Provider> prov;
 
 public:
-    explicit Head(std::variant<std::monostate, std::string, Hash> state = {}, std::weak_ptr<Provider> prov = {});
+    explicit Head(std::variant<std::monostate, std::string, Hash> state = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;

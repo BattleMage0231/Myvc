@@ -27,7 +27,7 @@ private:
     std::weak_ptr<Provider> prov;
 
 public:
-    explicit Branch(std::string name = {}, Hash commitHash = {}, std::weak_ptr<Provider> prov = {});
+    explicit Branch(std::string name = {}, Hash commitHash = {});
 
     void write(std::ostream &) const override;
     void read(std::istream &) override;

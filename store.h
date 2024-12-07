@@ -71,6 +71,8 @@ public:
 
     bool deleteBranch(const Branch &);
 
+    TreeBuilder makeTreeBuilder(Tree);
+
     std::optional<Blob> getBlobAt(const fs::path &);
     std::optional<Tree> getTreeAt(const fs::path &);
     Tree getWorkingTree();

@@ -11,10 +11,11 @@ Tree TreeBuilder::updateEntryHelper(const Tree &t, const fs::path &path, Node no
     if(tail == ".") {
         nodes.insert_or_assign(base, std::move(node));
     } else {
-        Tree x {{}, prov};
+        Tree x;
         if(nodes.find(base) != nodes.end()) {
             x = std::get<Tree>(nodes.at(base).getData());
         }
+        prov.lock()->createTree(x);
         Tree res = updateEntryHelper(x, tail, std::move(node));
         nodes.insert_or_assign(base, Node { res.hash(), false });
     }
