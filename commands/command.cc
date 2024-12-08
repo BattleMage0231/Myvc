@@ -23,8 +23,8 @@ Command::Command(const fs::path &base, std::vector<std::string> rawArgs, bool us
 }
 
 void Command::createRules() {
-    addFlagRule("--help", 0);
-    addFlagRule("--h", 0);
+    addFlagRule("--help");
+    addFlagRule("--h");
 }
 
 void Command::addFlagRule(std::string flag, size_t num) {

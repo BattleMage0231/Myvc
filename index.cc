@@ -18,6 +18,10 @@ Tree Index::getTree() const {
     return prov.lock()->getTree(treeHash).value();
 }
 
+void Index::setTree(Hash h) {
+    treeHash = std::move(h);
+}
+
 void Index::setProvider(std::weak_ptr<Provider> prov) {
     this->prov = std::move(prov);
 }

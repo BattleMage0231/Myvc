@@ -34,7 +34,7 @@ public:
     void read(std::istream &) override;
 
     Tree getTree() const;
-    void setTree(const Hash &);
+    void setTree(Hash);
     void setProvider(std::weak_ptr<Provider>);
 };
 

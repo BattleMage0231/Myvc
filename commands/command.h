@@ -40,7 +40,7 @@ protected:
     virtual void createRules();
     virtual void process() = 0;
 
-    void addFlagRule(std::string, size_t);
+    void addFlagRule(std::string, size_t num = 0);
     bool hasFlag(const std::string &) const;
     const std::vector<std::string> &getFlagArgs(const std::string &) const;
 

@@ -5,51 +5,34 @@
 
 using namespace myvc::commands;
 
-Add::Add(fs::path repoPath, std::vector<std::string> rawArgs)
-    : Command {std::move(repoPath), std::move(rawArgs)} {}
+Add::Add(fs::path basePath, std::vector<std::string> rawArgs)
+    : Command {std::move(basePath), std::move(rawArgs)} {}
 
-void Add::printHelpMessage() {
+void Add::printHelpMessage() const {
     std::cerr << "usage: myvc add [-r] path1 ... pathn" << std::endl;
 }
 
 void Add::createRules() {
     Command::createRules();
-    flagRules["-r"] = 0;
+    addFlagRule("-r");
 }
 
 void Add::process() {
     if(args.size() == 0) {
         std::cout << "Nothing specified, nothing added." << std::endl;
     } else {
-        Index index = resolveIndex();
-        Tree indexTree = index.getTree();
+        Index &index = repo->getIndex();
+        Tree workingTree = repo->getWorkingTree();
         std::vector<fs::path> paths;
         for(const std::string &arg : args) {
-            fs::path rel = getRelative(resolvePath(arg));
-            if(!fs::exists(rel) && !indexTree.getAtPath(rel)) {
-                throw command_error {"path " + static_cast<std::string>(rel) + " did not match any files"};
+            fs::path adjusted = resolvePath(arg);
+            bool inIndex = index.getTree().getAtPath(adjusted).has_value();
+            bool inWorkingTree = workingTree.getAtPath(adjusted).has_value();
+            if(!inIndex && !inWorkingTree) {
+                throw command_error {"path " + static_cast<std::string>(adjusted) + " did not match any files"};
             }
-            paths.emplace_back(rel);
+            paths.emplace_back(adjusted);
         }
-        for(const fs::path &path : paths) {
-            auto indexNode = indexTree.getAtPath(path);
-            if(indexNode && !fs::exists(path)) {
-                // delete file or directory
-                index.deleteEntry(path);
-            } else if(fs::exists(path)) {
-                if(fs::is_directory(path)) {
-                    Tree tree = store->getTreeAt(path);
-                    if(tree.getNodes().empty()) {
-                        index.deleteEntry(path);
-                    } else {
-                        index.updateEntry(path, tree);
-                    }
-                } else {
-                    // add file
-                    index.updateEntry(path, store->getBlobAt(path));
-                }
-            }
-            indexTree.reload();
-        }
+        repo->addToIndex(paths);
     }
 }
