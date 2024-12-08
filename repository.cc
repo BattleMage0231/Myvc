@@ -3,46 +3,22 @@
 
 using namespace myvc;
 
-Repository::Repository(fs::path path) : path {path}, store {path} {}
-
-Index &Repository::getIndex() const {
-    return store.getIndex();
-}
-
-Head &Repository::getHead() const {
-    return store.getHead();
-}
-
-Tree Repository::getWorkingTree() const {
-    return store.getWorkingTree();
-}
-
-std::optional<std::reference_wrapper<Branch>> Repository::getBranch(const std::string &name) {
-    return store.getBranch(name);
-}
-
-std::optional<Commit> Repository::getCommit(const Hash &hash) const {
-    return store.getCommit(hash);
-}
-
-std::optional<Hash> Repository::resolvePartialHash(std::string partial) const {
-    return store.resolvePartialObjectHash(std::move(partial));
-}
+Repository::Repository(fs::path path) : RepositoryStore {std::move(path)} {}
 
 void Repository::addToIndex(const std::vector<fs::path> &paths) {
     Index &index = getIndex();
-    TreeBuilder indexBuilder = store.makeTreeBuilder(index.getTree());
+    TreeBuilder indexBuilder = makeTreeBuilder(index.getTree());
     for(const fs::path &p : paths) {
         if(fs::exists(p)) {
             if(fs::is_directory(p)) {
-                Tree t = store.getTreeAt(path).value();
+                Tree t = getTreeAt(p).value();
                 if(t.getNodes().empty()) {
                     indexBuilder.deleteEntry(p);
                 } else {
                     indexBuilder.updateEntry(p, Tree::Node {t.hash(), false});
                 }
             } else {
-                indexBuilder.updateEntry(p, Tree::Node {store.getBlobAt(path).value().hash(), true});
+                indexBuilder.updateEntry(p, Tree::Node {getBlobAt(p).value().hash(), true});
             }
         } else {
             indexBuilder.deleteEntry(p);
@@ -52,14 +28,14 @@ void Repository::addToIndex(const std::vector<fs::path> &paths) {
 }
 
 void Repository::commitIndex(std::string msg, std::set<Hash> otherParents) {
-    Index &index = store.getIndex();
-    Head &head = store.getHead();
+    Index &index = getIndex();
+    Head &head = getHead();
     time_t time = std::time(nullptr);
     if(head.hasState()) {
         otherParents.insert(head.getCommit().hash());
     }
     Commit c { std::move(otherParents), index.getTree().hash(), time, std::move(msg) };
-    store.createCommit(c);
+    createCommit(c);
     if(head.hasState()) {
         auto val = head.get();
         if(std::holds_alternative<std::reference_wrapper<Branch>>(val)) {
@@ -69,7 +45,7 @@ void Repository::commitIndex(std::string msg, std::set<Hash> otherParents) {
             head.setCommit(c.hash());
         }
     } else {
-        store.createBranch(defaultBranch, c.hash());
+        createBranch(defaultBranch, c.hash());
         head.setBranch(defaultBranch);
     }
 }

@@ -62,6 +62,7 @@ public:
     bool createBlob(Blob &);
     bool createBranch(std::string, Hash);
 
+    const fs::path &getPath() const;
     std::optional<Commit> getCommit(const Hash &) const;
     std::optional<Tree> getTree(const Hash &) const;
     std::optional<Blob> getBlob(const Hash &) const;
@@ -80,9 +81,9 @@ public:
     void applyOnWorkingTree(const TreeDiff &);
     void setWorkingTree(const Tree &);
 
-    std::optional<Hash> resolvePartialObjectHash(const std::string &);
+    std::optional<Hash> resolvePartialHash(const std::string &);
 
-    ~RepositoryStore();
+    virtual ~RepositoryStore();
 };
 
 }

@@ -9,9 +9,9 @@
 #include "commands/add.h"
 #include "commands/status.h"
 #include "commands/commit.h"
+#include "commands/print.h"
 
 /*
-#include "commands/print.h"
 #include "commands/rm.h"
 #include "commands/diff.h"
 #include "commands/reset.h"
@@ -39,9 +39,9 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return std::make_unique<Status>(cur, args);
     } else if(subcmd == "commit") {
         return std::make_unique<Commit>(cur, args);
-    } /*else if(subcmd == "print") {
+    } else if(subcmd == "print") {
         return std::make_unique<Print>(cur, args);
-    } else if(subcmd == "rm") {
+    } /*else if(subcmd == "rm") {
         return std::make_unique<Rm>(cur, args);
     } else if(subcmd == "diff") {
         return std::make_unique<Diff>(cur, args);

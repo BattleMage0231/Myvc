@@ -48,6 +48,7 @@ protected:
     Commit resolveSymbol(const std::string &) const;
     Branch &resolveBranch(const std::string &) const; 
     fs::path resolvePath(const std::string &) const;
+    Hash resolveHash(const std::string &) const;
 
     void expectNumberOfArgs(size_t) const;
 

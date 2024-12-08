@@ -97,6 +97,10 @@ bool RepositoryStore::createBlob(Blob &c) {
     return createObject<Blob>(c);
 }
 
+const fs::path &RepositoryStore::getPath() const {
+    return path;
+}
+
 bool RepositoryStore::createBranch(std::string name, Hash commitHash) {
     if(branches.find(name) == branches.end()) {
         Branch b { name, std::move(commitHash) };
@@ -238,7 +242,7 @@ void RepositoryStore::setWorkingTree(const Tree &tree) {
     applyOnWorkingTree(diff);
 }
 
-std::optional<Hash> RepositoryStore::resolvePartialObjectHash(const std::string &partial) {
+std::optional<Hash> RepositoryStore::resolvePartialHash(const std::string &partial) {
     std::vector<Hash> hashes;
     if(!fs::exists(getMyvcPath() / "objects")) return {};
     for(const auto &entry : fs::directory_iterator(getMyvcPath() / "objects")) {

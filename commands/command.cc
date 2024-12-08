@@ -64,12 +64,10 @@ Commit Command::resolveSymbol(const std::string &str) const {
         if(maybeBranch) {
             c = maybeBranch.value().get().getCommit();
         } else {
-            auto maybeHash = repo->resolvePartialHash(token);
-            if(maybeHash) {
-                // assume object is commit
-                c = repo->getCommit(maybeHash.value()).value();
-            } else {
-                throw command_error {"invalid hash " + token};
+            try {
+                c = repo->getCommit(resolveHash(token)).value();
+            } catch(...) {
+                throw command_error {"invalid commit " + token};
             }
         }
     }
@@ -103,6 +101,12 @@ fs::path Command::resolvePath(const std::string &p) const {
     } catch(...) {
         throw command_error {"malformed path " + p};
     }
+}
+
+Hash Command::resolveHash(const std::string &s) const {
+    auto maybeHash = repo->resolvePartialHash(s);
+    if(maybeHash) return maybeHash.value();
+    else throw command_error {"nonexistent hash " + s};
 }
 
 void Command::execute() {
