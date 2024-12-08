@@ -9,7 +9,10 @@ using namespace myvc::commands;
 Command::Command(const fs::path &base, std::vector<std::string> args, bool useRepo)
     : basePath {fs::canonical(base)}, useRepo {useRepo}, args {std::move(args)}
 {
-    if(!useRepo) return;
+    if(!useRepo) {
+        repoPath = basePath;
+        return;
+    }
     for(fs::path p = basePath; !p.empty(); p = p.parent_path()) {
         if(RepositoryStore::existsAt(p)) {
             repoPath = p;
@@ -135,3 +138,5 @@ void Command::execute() {
         }
     }
 }
+
+Command::~Command() {}

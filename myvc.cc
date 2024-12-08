@@ -4,10 +4,9 @@
 #include <stdexcept>
 
 #include "commands/command.h"
+#include "commands/init.h"
 
 /*
-#include "commands/command.h"
-#include "commands/init.h"
 #include "commands/log.h"
 #include "commands/add.h"
 #include "commands/status.h"
@@ -23,17 +22,16 @@
 #include "commands/rebase.h"
 */
 
-//using namespace myvc::commands;
+using namespace myvc::commands;
 
-/*
 std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
     if(args.size() == 0) return {};
     fs::path cur = fs::current_path();
-    std::string subcmd = args[0];
+    std::string subcmd = args.at(0);
     args.erase(args.begin());
     if(subcmd == "init") {
         return std::make_unique<Init>(cur, args);
-    } else if(subcmd == "log") {
+    } /*else if(subcmd == "log") {
         return std::make_unique<Log>(cur, args);
     } else if(subcmd == "add") {
         return std::make_unique<Add>(cur, args);
@@ -59,14 +57,12 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return std::make_unique<Cherrypick>(cur, args);
     } else if(subcmd == "rebase") {
         return std::make_unique<Rebase>(cur, args);
-    } else {
+    }*/ else {
         return {};
     }
 }
-*/
 
 int main(int argc, char *argv[]) {
-    /*
     std::vector<std::string> args {argv + 1, argv + argc};
     std::unique_ptr<Command> cmd = createCommand(args);
     if(cmd) {
@@ -83,5 +79,4 @@ int main(int argc, char *argv[]) {
         std::cerr << "usage: myvc subcommand" << std::endl;
     }
     return 0;
-    */
 }

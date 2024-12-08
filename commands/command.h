@@ -23,13 +23,14 @@ public:
 };
 
 class Command {
-    fs::path basePath, repoPath;
+    fs::path basePath;
     std::vector<std::string> rawArgs;
     std::map<std::string, size_t> flagRules;
     std::map<std::string, std::vector<std::string>> flagArgs;
     bool useRepo;
 
 protected:
+    fs::path repoPath;
     std::shared_ptr<Repository> repo;
     std::vector<std::string> args;
 
@@ -51,7 +52,7 @@ protected:
 public:
     void execute();
 
-    virtual ~Command() {}
+    virtual ~Command();
 };
 
 }

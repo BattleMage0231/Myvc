@@ -3,10 +3,10 @@
 
 using namespace myvc::commands;
 
-Init::Init(fs::path repoPath, std::vector<std::string> rawArgs)
-    : Command {std::move(repoPath), std::move(rawArgs), false} {}
+Init::Init(fs::path basePath, std::vector<std::string> rawArgs)
+    : Command {std::move(basePath), std::move(rawArgs), false} {}
 
-void Init::printHelpMessage() {
+void Init::printHelpMessage() const {
     std::cerr << "usage: myvc init" << std::endl;
 }
 
