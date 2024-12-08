@@ -7,8 +7,12 @@
 
 using namespace myvc;
 
+bool RepositoryStore::existsAt(const fs::path &path) {
+    return fs::exists(path / myvcName);
+}
+
 bool RepositoryStore::createAt(const fs::path &path) {
-    if(fs::exists(path / myvcName)) return false;
+    if(existsAt(path)) return false;
     fs::create_directory(path / myvcName);
     return true;
 }
@@ -257,7 +261,7 @@ std::optional<Hash> RepositoryStore::resolvePartialObjectHash(const std::string 
 
 RepositoryStore::~RepositoryStore() {
     if(index) store(getIndexPath(), index.value());
-    if(head) store(getHeadPath(), head.value());
+    if(head && head.value().hasState()) store(getHeadPath(), head.value());
     for(const auto &[h, optr] : objects) store(getObjectPath(h), *optr);
     for(const auto &[name, b] : branches) store(getBranchPath(name), b);
 }

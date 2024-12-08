@@ -38,9 +38,10 @@ std::variant<const std::reference_wrapper<Branch>, Commit> Head::get() const {
     if(!prov.lock()) THROW("nonexistent provider");
     if(std::holds_alternative<std::string>(state)) {
         return prov.lock()->getBranch(std::get<std::string>(state)).value();
-    } else {
+    } else if(std::holds_alternative<Hash>(state)) {
         return prov.lock()->getCommit(std::get<Hash>(state)).value();
     }
+    THROW("nonexistent head");
 }
 
 Commit Head::getCommit() const {

@@ -52,6 +52,7 @@ class RepositoryStore :
 public:
     static constexpr std::string myvcName = ".myvc";
 
+    static bool existsAt(const fs::path &);
     static bool createAt(const fs::path &);
 
     explicit RepositoryStore(fs::path);

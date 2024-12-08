@@ -1,45 +1,39 @@
 #include <sstream>
 #include "command.h"
+#include "../head.h"
+#include "../store.h"
 
 using namespace myvc;
 using namespace myvc::commands;
 
-Command::Command(fs::path repoPath, std::vector<std::string> rawArgs, bool useStore)
-    : rawArgs {std::move(rawArgs)}, useStore {useStore}, repoPath {fs::canonical(repoPath)} {}
-
-void Command::parseArgs() {
-    for(size_t i = 0; i < rawArgs.size();) {
-        std::string cur = rawArgs[i++];
-        if(flagRules.find(cur) != flagRules.end()) {
-            size_t needed = flagRules[cur];
-            flagArgs[cur];
-            if(rawArgs.size() - i < needed) throw std::runtime_error {""};
-            for(; needed > 0; --needed, ++i) {
-                flagArgs[cur].emplace_back(rawArgs[i]);
-            }
-        } else {
-            args.push_back(cur);
+Command::Command(const fs::path &base, std::vector<std::string> args, bool useRepo)
+    : basePath {fs::canonical(base)}, useRepo {useRepo}, args {std::move(args)}
+{
+    if(!useRepo) return;
+    for(fs::path p = basePath; !p.empty(); p = p.parent_path()) {
+        if(RepositoryStore::existsAt(p)) {
+            repoPath = p;
+            return;
         }
     }
+    throw command_error {"no repository found"};
 }
 
-void Command::execute() {
-    flagRules["--help"] = 0;
-    flagRules["-h"] = 0;
-    createRules();
-    parseArgs();
-    if(flagArgs.find("-h") != flagArgs.end() || flagArgs.find("--help") != flagArgs.end()) {
-        printHelpMessage();
-    } else {
-        if(useStore) {
-            try {
-                store = std::make_shared<RepositoryStore>(repoPath);
-            } catch(...) {
-                throw command_error {"repository does not exist"};
-            }
-        }
-        process();
-    }
+void Command::createRules() {
+    addFlagRule("--help", 0);
+    addFlagRule("--h", 0);
+}
+
+void Command::addFlagRule(std::string flag, size_t num) {
+    flagRules.insert_or_assign(std::move(flag), num);
+}
+
+bool Command::hasFlag(const std::string &flag) const {
+    return flagArgs.find(flag) != flagArgs.end();
+}
+
+const std::vector<std::string> &Command::getFlagArgs(const std::string &flag) const {
+    return flagArgs.at(flag);
 }
 
 size_t Command::resolveNumber(const std::string &str) const {
@@ -51,91 +45,93 @@ size_t Command::resolveNumber(const std::string &str) const {
 }
 
 Commit Command::resolveSymbol(const std::string &str) const {
-    // extract commit part
     std::stringstream ss {str};
     std::string token;
     std::getline(ss, token, '^');
-    if(token == "HEAD") return *resolveHead();
-    auto branch = store->getBranch(token);
-    if(branch) return *(branch.value());
-    try {
-        Commit c = store->getCommit(store->resolvePartialObjectHash(token).value()).value();
-        while(std::getline(ss, token, '^')) {
-            size_t n = token == "" ? 0 : (std::stoull(token) - 1);
-            c = c.getParents().at(n - 1);
+    Commit c;
+    if(token == "HEAD") {
+        Head &head = repo->getHead();
+        if(head.hasState()) {
+            c = head.getCommit();
+        } else {
+            throw command_error {"HEAD does not exist"};
         }
-        return c;
-    } catch(...) {
-        throw command_error {"illegal commit symbol " + str};
+    } else {
+        auto maybeBranch = repo->getBranch(token);
+        if(maybeBranch) {
+            c = maybeBranch.value().get().getCommit();
+        } else {
+            auto maybeHash = repo->resolvePartialHash(token);
+            if(maybeHash) {
+                // assume object is commit
+                c = repo->getCommit(maybeHash.value()).value();
+            } else {
+                throw command_error {"invalid hash " + token};
+            }
+        }
     }
-}
-
-Head Command::resolveHead() const {
-    auto head = store->getHead();
-    if(head) return *head;
-    else throw command_error {"HEAD does not exist"}; 
-}
-
-Index Command::resolveIndex() {
-    auto index = store->getIndex();
-    if(index) return *index;
-    else {
-        Tree t {{}, store};
-        t.store();
-        Index index {t.hash(), t.hash(), store};
-        index.store();
-        return index;
+    while(std::getline(ss, token, '^')) {
+        size_t n = token == "" ? 0 : (resolveNumber(token) - 1);
+        c = c.getParents().at(n);
     }
+    return c;
 }
 
-Branch Command::resolveBranch(const std::string &name) const {
-    auto branch = store->getBranch(name);
-    if(!branch) throw command_error {"Branch " + name + " does not exist"};
-    return branch.value();
+Branch &Command::resolveBranch(const std::string &name) const {
+    auto maybeBranch = repo->getBranch(name);
+    if(maybeBranch) return maybeBranch.value();
+    throw command_error {"no branch with name " + name};
 }
 
 fs::path Command::resolvePath(const std::string &p) const {
-    fs::path res;
     try {
-        res = fs::weakly_canonical(fs::absolute(fs::path {p}));
+        fs::path res {p};
+        if(!res.is_absolute()) res = basePath / res;
+        res = res.lexically_normal().lexically_relative(repoPath);
+        if(res.empty()) {
+            throw command_error {"path " + p + " not in repository at " + static_cast<std::string>(repoPath)};
+        }
+        if(!res.lexically_relative(RepositoryStore::myvcName).empty()) {
+            throw command_error {"path " + p + " must not point to the myvc internal directory"};
+        }
+        return res;
+    } catch(const command_error &e) {
+        throw e;
     } catch(...) {
         throw command_error {"malformed path " + p};
     }
-    ensureWithinRepo(res);
-    fs::path myvc = repoPath / ".myvc";
-    if(std::mismatch(res.begin(), res.end(), myvc.begin(), myvc.end()).second == myvc.end()) {
-        throw command_error {"path" + static_cast<std::string>(p) + " cannot point to the .myvc directory"};
+}
+
+void Command::execute() {
+    createRules();
+    // parse arguments
+    for(size_t i = 0; i < rawArgs.size();) {
+        std::string cur = rawArgs.at(i++);
+        if(flagRules.find(cur) != flagRules.end()) {
+            size_t needed = flagRules.at(cur);
+            if(rawArgs.size() < i + needed) {
+                throw command_error {"flag " + cur + " requires " + std::to_string(needed) + " arguments"};
+            }
+            std::vector<std::string> v;
+            for(; needed > 0; --needed, ++i) {
+                v.emplace_back(rawArgs[i]);
+            }
+            flagArgs.insert_or_assign(cur, std::move(v));
+        } else {
+            args.emplace_back(cur);
+        }
     }
-    return res;
-}
-
-fs::path Command::getRelative(const fs::path &abs) const {
-    return fs::proximate(abs, repoPath);
-}
-
-void Command::ensureNoUncommitted() {
-    Index index = resolveIndex();
-    Head head = resolveHead();
-    TreeDiff diff1 = Tree::diff(store->getWorkingTree(), index.getTree()), diff2 = Tree::diff(index.getTree(), (*head).getTree());
-    if(!diff1.getChanges().empty() || !diff2.getChanges().empty()) {
-        throw command_error {"there are uncommitted changes"};
-    }
-}
-
-void Command::ensureIsFile(const fs::path &p) const {
-    if(fs::is_directory(p)) {
-        throw command_error {"path " + static_cast<std::string>(p) + " is not a file"};
-    }
-}
-
-void Command::ensureExists(const fs::path &p) const {
-    if(!fs::exists(p)) {
-        throw command_error {"path " + static_cast<std::string>(p) + " does not exist"};
-    }
-}
-
-void Command::ensureWithinRepo(const fs::path &p) const {
-    if(std::mismatch(p.begin(), p.end(), repoPath.begin(), repoPath.end()).second != repoPath.end()) {
-        throw command_error {"path " + static_cast<std::string>(p) + " is not within the repository at " + static_cast<std::string>(repoPath)};
+    if(hasFlag("-h") || hasFlag("--help")) {
+        printHelpMessage();
+    } else {
+        if(useRepo) repo = std::make_shared<Repository>(repoPath);
+        fs::path currentPath = fs::current_path();
+        fs::current_path(repoPath);
+        try {
+            process();
+        } catch(...) {
+            fs::current_path(currentPath);
+            throw;
+        }
     }
 }

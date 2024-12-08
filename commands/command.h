@@ -5,9 +5,7 @@
 #include <map>
 #include <memory>
 #include <stdexcept>
-#include "../store.h"
-#include "../commit.h"
-#include "../hash.h"
+#include "../repository.h"
 
 namespace myvc::commands {
 
@@ -25,36 +23,30 @@ public:
 };
 
 class Command {
+    fs::path basePath, repoPath;
     std::vector<std::string> rawArgs;
-    bool useStore;
-
-    void parseArgs();
-
-protected:
-    fs::path repoPath;
-    std::shared_ptr<RepositoryStore> store;
     std::map<std::string, size_t> flagRules;
     std::map<std::string, std::vector<std::string>> flagArgs;
+    bool useRepo;
+
+protected:
+    std::shared_ptr<Repository> repo;
     std::vector<std::string> args;
 
-    Command(fs::path, std::vector<std::string>, bool useStore = true);
+    Command(const fs::path &, std::vector<std::string>, bool useRepo = true);
 
-    virtual void printHelpMessage() = 0;
-    virtual void createRules() {};
+    virtual void printHelpMessage() const = 0;
+    virtual void createRules();
     virtual void process() = 0;
+
+    void addFlagRule(std::string, size_t);
+    bool hasFlag(const std::string &) const;
+    const std::vector<std::string> &getFlagArgs(const std::string &) const;
 
     size_t resolveNumber(const std::string &) const;
     Commit resolveSymbol(const std::string &) const;
-    Head resolveHead() const;
-    Index resolveIndex();
-    Branch resolveBranch(const std::string &) const; 
+    Branch &resolveBranch(const std::string &) const; 
     fs::path resolvePath(const std::string &) const;
-    fs::path getRelative(const fs::path &) const;
-
-    void ensureNoUncommitted();
-    void ensureIsFile(const fs::path &) const;
-    void ensureExists(const fs::path &) const;
-    void ensureWithinRepo(const fs::path &) const;
 
 public:
     void execute();

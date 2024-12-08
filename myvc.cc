@@ -3,7 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "repository.h"
+#include "commands/command.h"
 
 /*
 #include "commands/command.h"
@@ -66,7 +66,6 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
 */
 
 int main(int argc, char *argv[]) {
-    myvc::Repository r {"."};
     /*
     std::vector<std::string> args {argv + 1, argv + argc};
     std::unique_ptr<Command> cmd = createCommand(args);
