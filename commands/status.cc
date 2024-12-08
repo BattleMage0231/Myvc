@@ -5,30 +5,32 @@
 
 using namespace myvc::commands;
 
-Status::Status(fs::path repoPath, std::vector<std::string> rawArgs)
-    : Command {std::move(repoPath), std::move(rawArgs)} {}
+Status::Status(fs::path basePath, std::vector<std::string> rawArgs)
+    : Command {std::move(basePath), std::move(rawArgs)} {}
 
-void Status::printHelpMessage() {
+void Status::printHelpMessage() const {
     std::cerr << "usage: myvc status" << std::endl;
 }
 
 void Status::process() {
+    expectNumberOfArgs(0);
     // display head
-    auto head = store->getHead();
-    if(head) {
-        Head headVal = head.value();
-        if(headVal.isBranch()) {
-            std::cout << "On branch " << headVal.getBranch().value().getName() << std::endl;
-        } else {
-            std::cout << "HEAD detached at " << (*headVal).hash() << std::endl;
+    Head &h = repo->getHead();
+    if(h.hasState()) {
+        auto state = h.get();
+        if(std::holds_alternative<const std::reference_wrapper<Branch>>(state)) {
+            std::cout << "On branch " << std::get<const std::reference_wrapper<Branch>>(state).get().getName() << std::endl;
+        } else if(std::holds_alternative<Commit>(state)) {
+            std::cout << "HEAD detached at " << std::get<Commit>(state).hash() << std::endl;
         }
     } else {
         std::cout << "No commits yet" << std::endl;
     }
     std::cout << std::endl;
     // display index files
-    Index index = resolveIndex();
-    auto changes = index.getDiff().getChanges();
+    Index &index = repo->getIndex();
+    Tree tip = h.hasState() ? h.getCommit().getTree() : Tree {};
+    TreeDiff changes = Tree::diff(tip, index.getTree());
     if(changes.empty()) {
         std::cout << "Nothing to be committed" << std::endl;
     } else {
@@ -47,10 +49,8 @@ void Status::process() {
     }
     std::cout << std::endl;
     // display unstaged changes
-    Tree indexTree = index.getTree();
-    Tree workingTree = store->getWorkingTree();
-    TreeDiff diff {indexTree.getAllFiles(), workingTree.getAllFiles()};
-    auto wtChanges = diff.getChanges();
+    Tree workingTree = repo->getWorkingTree();
+    TreeDiff wtChanges = Tree::diff(index.getTree(), workingTree);
     if(wtChanges.empty()) {
         std::cout << "No untracked files" << std::endl;
     } else {

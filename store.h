@@ -24,8 +24,7 @@ class RepositoryStore :
     public Branch::Provider,
     public Head::Provider,
     public Index::Provider,
-    public TreeBuilder::Provider,
-    public std::enable_shared_from_this<RepositoryStore>
+    public TreeBuilder::Provider
 {
     fs::path path;
 
@@ -34,6 +33,7 @@ class RepositoryStore :
     mutable std::optional<Index> index;
     mutable std::optional<Head> head;
     mutable std::optional<Hash> workingTree;
+    mutable std::shared_ptr<RepositoryStore> self;
 
     std::shared_ptr<RepositoryStore> getInstance() const;
 

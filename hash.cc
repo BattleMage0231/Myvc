@@ -108,7 +108,7 @@ static std::vector<char> hexToChars(const std::string &str) {
     for(size_t i = 0; i < str.size(); i += 2) {
         std::string b = str.substr(i, 2);
         try {
-            res.push_back(static_cast<char>(std::stoi(b, nullptr, 16)));
+            res.emplace_back(static_cast<char>(std::stoi(b, nullptr, 16)));
         } catch(...) {
             THROW("illegal hex string");
         }
@@ -116,7 +116,10 @@ static std::vector<char> hexToChars(const std::string &str) {
     return res;
 }
 
-SHA1Hash::SHA1Hash(const std::string &hex) : SHA1Hash {hexToChars(hex)} {}
+SHA1Hash::SHA1Hash(const std::string &hex) {
+    std::vector<char> v = hexToChars(hex);
+    for(size_t i = 0; i < 20; ++i) bytes[i] = v[i];
+}
 
 std::strong_ordering SHA1Hash::operator<=>(const SHA1Hash &other) const {
     for(size_t i = 0; i < 20; ++i) {

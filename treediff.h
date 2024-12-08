@@ -24,6 +24,8 @@ class TreeDiff {
     std::map<fs::path, TreeChange> changes;
 
 public:
+    using Iterator = std::map<fs::path, TreeChange>::const_iterator;
+
     struct Conflicts {
         std::set<fs::path> deleteConflicts;
         std::map<fs::path, std::pair<Diff, Diff::Conflicts>> modifyConflicts;
@@ -36,6 +38,10 @@ public:
 
     std::map<fs::path, TreeChange> &getChanges();
     const std::map<fs::path, TreeChange> &getChanges() const;
+
+    bool empty() const;
+    Iterator begin() const;
+    Iterator end() const;
 };
 
 }

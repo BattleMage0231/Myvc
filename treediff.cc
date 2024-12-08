@@ -93,3 +93,15 @@ std::map<fs::path, TreeChange> &TreeDiff::getChanges() {
 const std::map<fs::path, TreeChange> &TreeDiff::getChanges() const {
     return changes;
 }
+
+bool TreeDiff::empty() const {
+    return changes.empty();
+}
+
+TreeDiff::Iterator TreeDiff::begin() const {
+    return changes.begin();
+}
+
+TreeDiff::Iterator TreeDiff::end() const {
+    return changes.end();
+}
