@@ -6,14 +6,14 @@
 using namespace myvc;
 using namespace myvc::commands;
 
-Command::Command(const fs::path &base, std::vector<std::string> args, bool useRepo)
-    : basePath {fs::canonical(base)}, useRepo {useRepo}, args {std::move(args)}
+Command::Command(const fs::path &base, std::vector<std::string> rawArgs, bool useRepo)
+    : basePath {fs::canonical(base)}, rawArgs {std::move(rawArgs)}, useRepo {useRepo}
 {
     if(!useRepo) {
         repoPath = basePath;
         return;
     }
-    for(fs::path p = basePath; !p.empty(); p = p.parent_path()) {
+    for(fs::path p = basePath; p != "/"; p = p.parent_path()) {
         if(RepositoryStore::existsAt(p)) {
             repoPath = p;
             return;
@@ -136,6 +136,12 @@ void Command::execute() {
             fs::current_path(currentPath);
             throw;
         }
+    }
+}
+
+void Command::expectNumberOfArgs(size_t number) const {
+    if(args.size() != number) {
+        throw command_error {"invalid number of arguments"};
     }
 }
 

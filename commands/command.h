@@ -49,6 +49,8 @@ protected:
     Branch &resolveBranch(const std::string &) const; 
     fs::path resolvePath(const std::string &) const;
 
+    void expectNumberOfArgs(size_t) const;
+
 public:
     void execute();
 

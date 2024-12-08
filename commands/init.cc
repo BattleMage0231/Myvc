@@ -11,6 +11,7 @@ void Init::printHelpMessage() const {
 }
 
 void Init::process() {
+    expectNumberOfArgs(0);
     if(RepositoryStore::createAt(repoPath)) {
         std::cout << "initialized repository at " << repoPath << std::endl;
     } else {

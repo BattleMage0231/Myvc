@@ -5,7 +5,7 @@
 namespace myvc::commands {
 
 class Log : public Command {
-    void printHelpMessage() override;
+    void printHelpMessage() const override;
     void createRules() override;
     void process() override;
 
