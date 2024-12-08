@@ -18,8 +18,8 @@ void Status::process() {
     Head &h = repo->getHead();
     if(h.hasState()) {
         auto state = h.get();
-        if(std::holds_alternative<const std::reference_wrapper<Branch>>(state)) {
-            std::cout << "On branch " << std::get<const std::reference_wrapper<Branch>>(state).get().getName() << std::endl;
+        if(std::holds_alternative<std::reference_wrapper<Branch>>(state)) {
+            std::cout << "On branch " << std::get<std::reference_wrapper<Branch>>(state).get().getName() << std::endl;
         } else if(std::holds_alternative<Commit>(state)) {
             std::cout << "HEAD detached at " << std::get<Commit>(state).hash() << std::endl;
         }

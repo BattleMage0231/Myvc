@@ -21,7 +21,7 @@ RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {
     if(!fs::exists(getMyvcPath())) {
         THROW(".myvc does not exist");
     }
-    self = std::shared_ptr<RepositoryStore>(const_cast<RepositoryStore *>(this), [](auto *) {});
+    self = std::shared_ptr<RepositoryStore>(this, [](auto *) {});
 }
 
 fs::path RepositoryStore::getMyvcPath() const {

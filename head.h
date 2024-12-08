@@ -31,6 +31,7 @@ public:
 
     bool hasState() const;
     std::variant<const std::reference_wrapper<Branch>, Commit> get() const;
+    std::variant<std::reference_wrapper<Branch>, Commit> get();
     Commit getCommit() const;
     void setBranch(std::string);
     void setCommit(Hash);

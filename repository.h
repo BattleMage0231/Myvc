@@ -11,6 +11,8 @@ class Repository {
     mutable RepositoryStore store;
 
 public:
+    static constexpr std::string defaultBranch = "main";
+
     explicit Repository(fs::path);
 
     Head &getHead() const;
@@ -21,6 +23,7 @@ public:
     std::optional<Hash> resolvePartialHash(std::string) const;
 
     void addToIndex(const std::vector<fs::path> &);
+    void commitIndex(std::string, std::set<Hash> otherParents = {});
 };
 
 }

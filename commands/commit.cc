@@ -6,39 +6,44 @@
 #include <fstream>
 #include "commit.h"
 #include "../serialize.h"
+#include "../store.h"
 
 using namespace myvc::commands;
 
-Commit::Commit(fs::path repoPath, std::vector<std::string> rawArgs)
-    : Command {std::move(repoPath), std::move(rawArgs)} {}
+const std::string Commit::editMessagePath = RepositoryStore::myvcName + "/COMMIT_EDITMSG";
+const std::string Commit::editorName = "vim";
 
-void Commit::printHelpMessage() {
+Commit::Commit(fs::path basePath, std::vector<std::string> rawArgs)
+    : Command {std::move(basePath), std::move(rawArgs)} {}
+
+void Commit::printHelpMessage() const {
     std::cerr << "usage: myvc commit [-m msg]" << std::endl;
 }
 
 void Commit::createRules() {
     Command::createRules();
-    flagRules["-m"] = 1;
+    addFlagRule("-m", 1);
 }
 
 void Commit::process() {
-    Index index = resolveIndex();
-    if(index.getTree().hash() == index.getBase().hash()) {
+    expectNumberOfArgs(0);
+    Index &index = repo->getIndex();
+    Head &head = repo->getHead();
+    Tree tip = head.hasState() ? head.getCommit().getTree() : Tree {};
+    if(index.getTree() == tip) {
         std::cout << "No changes to commit" << std::endl;
     } else {
         std::string msg;
-        if(flagArgs.find("-m") != flagArgs.end()) {
-            msg = flagArgs["-m"].front();
+        if(hasFlag("-m")) {
+            msg = getFlagArgs("-m").at(0);
         } else {
-            fs::remove(".myvc/COMMIT_EDITMSG");
-            std::system("vim .myvc/COMMIT_EDITMSG");
-            std::ifstream editedFile(".myvc/COMMIT_EDITMSG");
+            fs::remove(editMessagePath);
+            std::system((editorName + " " + editMessagePath).c_str());
+            std::ifstream editedFile(editMessagePath);
             std::getline(editedFile, msg);
         }
-        time_t time = std::time(nullptr);
-        auto head = store->getHead();
-        std::set<Hash> parents;
-        if(head) parents.insert(head.value().getCommit().hash());
+        repo->commitIndex(std::move(msg));
+        /* todo
         if(fs::exists(".myvc/MERGE_INFO")) {
             std::ifstream in {".myvc/MERGE_INFO"};
             Hash h;
@@ -46,22 +51,6 @@ void Commit::process() {
             parents.insert(h);
             fs::remove(".myvc/MERGE_INFO");
         }
-        myvc::Commit c { parents, index.getTree().hash(), time, msg, store };
-        c.store();
-        if(head && head.value().isBranch()) {
-            Branch b = head.value().getBranch().value();
-            b.setCommit(c.hash());
-            b.store();
-        } else if(head) {
-            Head headVal = head.value();
-            headVal.setState(c.hash());
-            headVal.store();
-        } else {
-            Branch main {"main", c.hash(), store};
-            main.store();
-            Head newHead {main.getName(), store};
-            newHead.store();
-        }
-        index.reset(index.getTree().hash());
+        */
     }
 }

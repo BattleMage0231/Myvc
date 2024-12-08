@@ -50,3 +50,26 @@ void Repository::addToIndex(const std::vector<fs::path> &paths) {
     }
     index.setTree(indexBuilder.getTree().hash());
 }
+
+void Repository::commitIndex(std::string msg, std::set<Hash> otherParents) {
+    Index &index = store.getIndex();
+    Head &head = store.getHead();
+    time_t time = std::time(nullptr);
+    if(head.hasState()) {
+        otherParents.insert(head.getCommit().hash());
+    }
+    Commit c { std::move(otherParents), index.getTree().hash(), time, std::move(msg) };
+    store.createCommit(c);
+    if(head.hasState()) {
+        auto val = head.get();
+        if(std::holds_alternative<std::reference_wrapper<Branch>>(val)) {
+            Branch &b = std::get<std::reference_wrapper<Branch>>(val);
+            b.setCommit(c.hash());
+        } else if(std::holds_alternative<Commit>(val)) {
+            head.setCommit(c.hash());
+        }
+    } else {
+        store.createBranch(defaultBranch, c.hash());
+        head.setBranch(defaultBranch);
+    }
+}
