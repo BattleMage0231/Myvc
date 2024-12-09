@@ -68,10 +68,11 @@ public:
     std::optional<Blob> getBlob(const Hash &) const;
     std::optional<std::reference_wrapper<Branch>> getBranch(const std::string &);
     std::optional<const std::reference_wrapper<Branch>> getBranch(const std::string &) const;
+    std::vector<std::reference_wrapper<Branch>> getAllBranches();
     Index &getIndex();
     Head &getHead();
 
-    bool deleteBranch(const Branch &);
+    bool deleteBranch(const std::string &);
 
     TreeBuilder makeTreeBuilder(Tree);
 

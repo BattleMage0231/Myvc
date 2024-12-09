@@ -27,6 +27,16 @@ void Repository::addToIndex(const std::vector<fs::path> &paths) {
     index.setTree(indexBuilder.getTree().hash());
 }
 
+void Repository::removeFromIndex(const std::vector<fs::path> &paths, bool cached) {
+    Index &index = getIndex();
+    TreeBuilder indexBuilder = makeTreeBuilder(index.getTree());
+    for(const fs::path &p : paths) {
+        indexBuilder.deleteEntry(p);
+        if(!cached) fs::remove_all(p);
+    }
+    index.setTree(indexBuilder.getTree().hash());
+}
+
 void Repository::commitIndex(std::string msg, std::set<Hash> otherParents) {
     Index &index = getIndex();
     Head &head = getHead();
@@ -37,15 +47,29 @@ void Repository::commitIndex(std::string msg, std::set<Hash> otherParents) {
     Commit c { std::move(otherParents), index.getTree().hash(), time, std::move(msg) };
     createCommit(c);
     if(head.hasState()) {
-        auto val = head.get();
-        if(std::holds_alternative<std::reference_wrapper<Branch>>(val)) {
-            Branch &b = std::get<std::reference_wrapper<Branch>>(val);
-            b.setCommit(c.hash());
-        } else if(std::holds_alternative<Commit>(val)) {
-            head.setCommit(c.hash());
-        }
+        moveHeadSticky(c.hash());
     } else {
         createBranch(defaultBranch, c.hash());
         head.setBranch(defaultBranch);
     }
+}
+
+void Repository::moveHeadSticky(const Hash &hash) {
+    Head &head = getHead();
+    auto val = head.get();
+    if(std::holds_alternative<std::reference_wrapper<Branch>>(val)) {
+        Branch &b = std::get<std::reference_wrapper<Branch>>(val);
+        b.setCommit(hash);
+    } else {
+        head.setCommit(hash);
+    }
+}
+
+void Repository::checkout(const std::string &branch) {
+    Index &index = getIndex();
+    Head &head = getHead();
+    Branch &b = getBranch(branch).value();
+    index.setTree(b.getCommit().getTree().hash());
+    head.setBranch(b.getName());
+    setWorkingTree(b.getCommit().getTree());
 }

@@ -6,41 +6,37 @@
 
 using namespace myvc::commands;
 
-Rm::Rm(fs::path repoPath, std::vector<std::string> rawArgs)
-    : Command {std::move(repoPath), std::move(rawArgs)} {}
+Rm::Rm(fs::path basePath, std::vector<std::string> rawArgs)
+    : Command {std::move(basePath), std::move(rawArgs)} {}
 
-void Rm::printHelpMessage() {
+void Rm::printHelpMessage() const {
     std::cerr << "usage: myvc rm [-r] [--cached] path1 ... pathn" << std::endl;
 }
 
 void Rm::createRules() {
     Command::createRules();
-    flagRules["-r"] = 0;
-    flagRules["--cached"] = 0;
+    addFlagRule("-r");
+    addFlagRule("--cached");
 }
 
 void Rm::process() {
     if(args.size() == 0) {
         std::cout << "Nothing specified, nothing rmed." << std::endl;
     } else {
-        Index index = resolveIndex();
-        Tree indexTree = index.getTree();
-        bool recursive = flagArgs.find("-r") != flagArgs.end();
-        bool cached = flagArgs.find("--cached") != flagArgs.end();
+        Tree indexTree = repo->getIndex().getTree();
+        Tree workingTree = repo->getWorkingTree();
+        bool recursive = hasFlag("-r"), cached = hasFlag("--cached");
         std::vector<fs::path> paths;
         for(const std::string &arg : args) {
-            fs::path rel = getRelative(resolvePath(arg));
-            auto entity = indexTree.getAtPath(rel);
+            fs::path adjusted = resolvePath(arg);
+            auto entity = indexTree.getAtPath(adjusted);
             if(!entity) {
-                throw command_error {"path " + static_cast<std::string>(rel) + " did not match any files in the index"};
+                throw command_error {"path " + static_cast<std::string>(adjusted) + " did not match any files in the index"};
             } else if(std::holds_alternative<Tree>(entity.value()) && !recursive) {
-                throw command_error {"need to pass -r to rm the directory " + static_cast<std::string>(rel)};
+                throw command_error {"need to pass -r to remove the directory " + static_cast<std::string>(adjusted)};
             }
-            paths.emplace_back(rel);
+            paths.emplace_back(std::move(adjusted));
         }
-        for(const fs::path &path : paths) {
-            index.deleteEntry(path);
-            if(!cached) fs::remove_all(path);
-        }
+        repo->removeFromIndex(paths, cached);
     }
 }

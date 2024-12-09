@@ -13,7 +13,10 @@ public:
     explicit Repository(fs::path);
 
     void addToIndex(const std::vector<fs::path> &);
+    void removeFromIndex(const std::vector<fs::path> &, bool);
     void commitIndex(std::string, std::set<Hash> otherParents = {});
+    void moveHeadSticky(const Hash &);
+    void checkout(const std::string &);
 };
 
 }

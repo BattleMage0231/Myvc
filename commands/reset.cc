@@ -6,41 +6,33 @@
 
 using namespace myvc::commands;
 
-Reset::Reset(fs::path repoPath, std::vector<std::string> rawArgs)
-    : Command {std::move(repoPath), std::move(rawArgs)} {}
+Reset::Reset(fs::path basePath, std::vector<std::string> rawArgs)
+    : Command {std::move(basePath), std::move(rawArgs)} {}
 
-void Reset::printHelpMessage() {
+void Reset::printHelpMessage() const {
     std::cerr << "usage: myvc reset [--soft] [--mixed] [--hard] commit" << std::endl;
 }
 
 void Reset::createRules() {
     Command::createRules();
-    flagRules["--soft"] = 0;
-    flagRules["--mixed"] = 0;
-    flagRules["--hard"] = 0;
+    addFlagRule("--soft");
+    addFlagRule("--mixed");
+    addFlagRule("--hard");
 }
 
 void Reset::process() {
-    bool mixed = flagArgs.find("--mixed") != flagArgs.end();
-    bool hard = flagArgs.find("--hard") != flagArgs.end();
-    if(args.size() != 1) throw command_error {"incorrect number of arguments"};
+    expectNumberOfArgs(1);
+    bool mixed = hasFlag("--mixed");
+    bool hard = hasFlag("--hard");
     // move head
-    Head head = resolveHead();
-    if(store->getBranch(args.at(0))) {
-        head.setState(args.at(0));
-    } else {
-        head.setState(resolveSymbol(args.at(0)).hash());
-    }
-    head.store();
+    repo->moveHeadSticky(resolveSymbol(args.at(0)));
     // reset index
-    Index index = resolveIndex();
+    Head &head = repo->getHead();
     if(mixed || hard) {
-        index.reset((*head).hash());
-    } else {
-        index.updateBase((*head).hash());
+        repo->getIndex().setTree(head.getCommit().getTree().hash());
     }
     // reset working directory
     if(hard) {
-        store->setWorkingTree((*head).getTree());
+        repo->setWorkingTree(head.getCommit().getTree());
     }
 }

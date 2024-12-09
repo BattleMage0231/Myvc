@@ -149,4 +149,37 @@ void Command::expectNumberOfArgs(size_t number) const {
     }
 }
 
+void Command::expectExists(const fs::path &path) const {
+    Tree workingTree = repo->getWorkingTree();
+    if(!workingTree.getAtPath(path).has_value()) {
+        throw command_error {"path " + static_cast<std::string>(path) + " does not exist in the working directory"};
+    }
+}
+
+void Command::expectIsDir(const fs::path &p) const {
+    Tree workingTree = repo->getWorkingTree();
+    auto thing = workingTree.getAtPath(p);
+    if(!thing.has_value() || !std::holds_alternative<Tree>(thing.value())) {
+        throw command_error {"directory " + static_cast<std::string>(p) + " does not exist in the working directory"};
+    }
+}
+
+void Command::expectIsFile(const fs::path &p) const {
+    Tree workingTree = repo->getWorkingTree();
+    auto thing = workingTree.getAtPath(p);
+    if(!thing.has_value() || !std::holds_alternative<Blob>(thing.value())) {
+        throw command_error {"file " + static_cast<std::string>(p) + " does not exist in the working directory"};
+    }
+}
+
+void Command::expectCleanState() const {
+    Index &index = repo->getIndex();
+    Head &head = repo->getHead();
+    Tree headTree = head.hasState() ? head.getCommit().getTree() : Tree {};
+    TreeDiff diff1 = Tree::diff(repo->getWorkingTree(), index.getTree()), diff2 = Tree::diff(index.getTree(), headTree);
+    if(!diff1.getChanges().empty() || !diff2.getChanges().empty()) {
+        throw command_error {"clean working directory and index expected"};
+    }
+}
+
 Command::~Command() {}

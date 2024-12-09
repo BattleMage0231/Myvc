@@ -21,17 +21,17 @@ void Add::process() {
     if(args.size() == 0) {
         std::cout << "Nothing specified, nothing added." << std::endl;
     } else {
-        Index &index = repo->getIndex();
+        Tree indexTree = repo->getIndex().getTree();
         Tree workingTree = repo->getWorkingTree();
         std::vector<fs::path> paths;
         for(const std::string &arg : args) {
             fs::path adjusted = resolvePath(arg);
-            bool inIndex = index.getTree().getAtPath(adjusted).has_value();
+            bool inIndex = indexTree.getAtPath(adjusted).has_value();
             bool inWorkingTree = workingTree.getAtPath(adjusted).has_value();
             if(!inIndex && !inWorkingTree) {
                 throw command_error {"path " + static_cast<std::string>(adjusted) + " did not match any files"};
             }
-            paths.emplace_back(adjusted);
+            paths.emplace_back(std::move(adjusted));
         }
         repo->addToIndex(paths);
     }

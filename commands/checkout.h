@@ -5,7 +5,7 @@
 namespace myvc::commands {
 
 class Checkout : public Command {
-    void printHelpMessage() override;
+    void printHelpMessage() const override;
     void process() override;
 
 public:

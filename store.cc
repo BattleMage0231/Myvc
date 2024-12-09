@@ -137,6 +137,16 @@ std::optional<const std::reference_wrapper<Branch>> RepositoryStore::getBranch(c
     else return {};
 }
 
+std::vector<std::reference_wrapper<Branch>> RepositoryStore::getAllBranches() {
+    std::vector<std::reference_wrapper<Branch>> res;
+    for(const auto &entry : fs::directory_iterator(getMyvcPath() / "refs")) {
+        if(fs::is_regular_file(entry.status())) {
+            res.emplace_back(getBranch(entry.path().filename()).value());
+        }
+    }
+    return res;
+}
+
 Index &RepositoryStore::getIndex() {
     if(index) return index.value();
     auto val = load<Index>(getIndexPath());
@@ -163,15 +173,15 @@ Head &RepositoryStore::getHead() {
     return head.value();
 }
 
-bool RepositoryStore::deleteBranch(const Branch &b) {
-    fs::path branchPath = getBranchPath(b.getName());
+bool RepositoryStore::deleteBranch(const std::string &branch) {
+    fs::path branchPath = getBranchPath(branch);
     bool deleted = false;
     if(fs::exists(branchPath)) {
         fs::remove(branchPath);
         deleted = true;
     }
-    if(branches.find(b.getName()) != branches.end()) {
-        branches.erase(b.getName());
+    if(branches.find(branch) != branches.end()) {
+        branches.erase(branch);
         deleted = true;
     }
     return deleted;

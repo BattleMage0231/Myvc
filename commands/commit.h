@@ -10,8 +10,8 @@ class Commit : public Command {
     void process() override;
 
 public:
-    static const std::string editMessagePath;
-    static const std::string editorName;
+    inline static const std::string editMessagePath = RepositoryStore::myvcName + "/COMMIT_EDITMSG";
+    static constexpr std::string editorName = "vim";
 
     Commit(fs::path, std::vector<std::string>);
 };

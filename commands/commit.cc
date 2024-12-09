@@ -10,9 +10,6 @@
 
 using namespace myvc::commands;
 
-const std::string Commit::editMessagePath = RepositoryStore::myvcName + "/COMMIT_EDITMSG";
-const std::string Commit::editorName = "vim";
-
 Commit::Commit(fs::path basePath, std::vector<std::string> rawArgs)
     : Command {std::move(basePath), std::move(rawArgs)} {}
 

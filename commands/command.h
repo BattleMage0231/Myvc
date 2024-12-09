@@ -51,6 +51,10 @@ protected:
     Hash resolveHash(const std::string &) const;
 
     void expectNumberOfArgs(size_t) const;
+    void expectExists(const fs::path &) const;
+    void expectIsDir(const fs::path &) const;
+    void expectIsFile(const fs::path &) const;
+    void expectCleanState() const;
 
 public:
     void execute();

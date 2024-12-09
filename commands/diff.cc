@@ -4,27 +4,25 @@
 #include "diff.h"
 #include "../diff.h"
 #include "../treediff.h"
-#include "../tree.h"
 
 using myvc::TreeDiff, myvc::Change, myvc::TreeChange, myvc::Hunk, myvc::Blob, myvc::Tree;
 using namespace myvc::commands;
 
-Diff::Diff(fs::path repoPath, std::vector<std::string> rawArgs)
-    : Command {std::move(repoPath), std::move(rawArgs)} {}
+Diff::Diff(fs::path basePath, std::vector<std::string> rawArgs)
+    : Command {std::move(basePath), std::move(rawArgs)} {}
 
-void Diff::printHelpMessage() {
+void Diff::printHelpMessage() const {
     std::cerr << "usage: myvc diff [--no-index] [--cached] commit1 [commit2]" << std::endl;
 }
 
 void Diff::createRules() {
     Command::createRules();
-    flagRules["--no-index"] = 0;
-    flagRules["--cached"] = 0;
+    addFlagRule("--no-index");
+    addFlagRule("--cached");
 }
 
-void printHunk(const myvc::Hunk &hunk) {
-    const std::vector<Change> &changes = hunk.getChanges();
-    for(const auto &change : changes) {
+static void printHunk(const myvc::Hunk &hunk) {
+    for(const auto &change : hunk.changes) {
         if(change.type == Change::Type::Add) {
             std::cout << '+';
         } else {
@@ -34,7 +32,7 @@ void printHunk(const myvc::Hunk &hunk) {
     }
 }
 
-void printDiff(const myvc::Diff &diff) {
+static void printDiff(const myvc::Diff &diff) {
     const std::vector<std::string> &base = diff.getBase();
     const std::vector<Hunk> &hunks = diff.getHunks();
     if(hunks.empty()) {
@@ -43,14 +41,14 @@ void printDiff(const myvc::Diff &diff) {
     }
     printHunk(hunks.front());
     for(size_t i = 1; i < hunks.size(); ++i) {
-        for(size_t j = hunks[i - 1].getEnd(); j < hunks[i].getIndex(); ++i) {
+        for(size_t j = hunks[i - 1].end; j < hunks[i].index; ++i) {
             std::cout << base[j] << std::endl;
         }
         printHunk(hunks[i]);
     }
 }
 
-void printTreeDiff(const TreeDiff &diff) {
+static void printTreeDiff(const TreeDiff &diff) {
     for(const auto &[path, change] : diff.getChanges()) {
         if(change.type == TreeChange::Type::Add) {
             std::cout << "added file " << path << std::endl;
@@ -68,39 +66,36 @@ void printTreeDiff(const TreeDiff &diff) {
 }
 
 void Diff::process() {
-    bool noIndex = flagArgs.find("--no-index") != flagArgs.end();
-    bool cached = flagArgs.find("--cached") != flagArgs.end();
+    bool noIndex = hasFlag("--no-index"), cached = hasFlag("--cached");
     if(noIndex && cached) {
         throw command_error {"can't pass both --no-index and --cached"};
     } else if(noIndex) {
-        if(args.size() != 2) throw command_error {"diff requires two paths"};
+        expectNumberOfArgs(2);
         fs::path first = resolvePath(args.at(0)), second = resolvePath(args.at(1));
-        ensureExists(first);
-        ensureExists(second);
-        if(!fs::is_regular_file(first) || !fs::is_regular_file(second)) {
-            throw command_error {"diff requires two paths to files"};
-        }
+        expectIsFile(first);
+        expectIsFile(second);
         std::cout << "--- " << first << std::endl;
         std::cout << "+++ " << second << std::endl;
-        printDiff(Blob::diff(store->getBlobAt(first), store->getBlobAt(second)));
+        printDiff(Blob::diff(repo->getBlobAt(first).value(), repo->getBlobAt(second).value()));
     } else if(cached) {
-        Commit c = (args.size() == 1) ? resolveSymbol(args.at(0)) : *resolveHead();
-        Tree commitTree = c.getTree(), indexTree = resolveIndex().getTree();
-        printTreeDiff(Tree::diff(commitTree, indexTree));
+        Commit c;
+        if(args.empty()) {
+            c = repo->getHead().getCommit();
+        } else {
+            expectNumberOfArgs(1);
+            c = resolveSymbol(args.at(0));
+        }
+        printTreeDiff(Tree::diff(c.getTree(), repo->getIndex().getTree()));
     } else {
-        if(args.size() == 2) {
-            Commit a = resolveSymbol(args.at(0)), b = resolveSymbol(args.at(1));
-            Tree at = a.getTree(), bt = b.getTree();
-            printTreeDiff(Tree::diff(at, bt));
+        if(args.empty()) {
+            printTreeDiff(Tree::diff(repo->getIndex().getTree(), repo->getWorkingTree()));
         } else if(args.size() == 1) {
             Commit a = resolveSymbol(args.at(0));
-            Tree t = a.getTree(), workingTree = store->getWorkingTree();
-            printTreeDiff(Tree::diff(t, workingTree));
-        } else if(args.empty()) {
-            Tree index = resolveIndex().getTree(), workingTree = store->getWorkingTree();
-            printTreeDiff(Tree::diff(index, workingTree));
+            printTreeDiff(Tree::diff(a.getTree(), repo->getWorkingTree()));
         } else {
-            throw command_error {"invalid number of arguments"};
+            expectNumberOfArgs(2);
+            Commit a = resolveSymbol(args.at(0)), b = resolveSymbol(args.at(1));
+            printTreeDiff(Tree::diff(a.getTree(), b.getTree()));
         }
     }
 }

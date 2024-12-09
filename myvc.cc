@@ -10,13 +10,13 @@
 #include "commands/status.h"
 #include "commands/commit.h"
 #include "commands/print.h"
-
-/*
 #include "commands/rm.h"
 #include "commands/diff.h"
 #include "commands/reset.h"
 #include "commands/branch.h"
 #include "commands/checkout.h"
+
+/*
 #include "commands/merge.h"
 #include "commands/cherrypick.h"
 #include "commands/rebase.h"
@@ -41,7 +41,7 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return std::make_unique<Commit>(cur, args);
     } else if(subcmd == "print") {
         return std::make_unique<Print>(cur, args);
-    } /*else if(subcmd == "rm") {
+    } else if(subcmd == "rm") {
         return std::make_unique<Rm>(cur, args);
     } else if(subcmd == "diff") {
         return std::make_unique<Diff>(cur, args);
@@ -51,7 +51,7 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return std::make_unique<Branch>(cur, args);
     } else if(subcmd == "checkout") {
         return std::make_unique<Checkout>(cur, args);
-    } else if(subcmd == "merge") {
+    } /*else if(subcmd == "merge") {
         return std::make_unique<Merge>(cur, args);
     } else if(subcmd == "cherry-pick") {
         return std::make_unique<Cherrypick>(cur, args);
