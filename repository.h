@@ -17,6 +17,7 @@ public:
     void commitIndex(std::string, std::set<Hash> otherParents = {});
     void moveHeadSticky(const Hash &);
     void checkout(const std::string &);
+    std::vector<fs::path> merge(const Hash &);
 };
 
 }

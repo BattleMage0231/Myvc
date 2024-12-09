@@ -30,7 +30,7 @@ private:
     std::weak_ptr<Provider> prov;
 
 public:
-    static std::optional<Commit> getLCA(const Commit &, const Commit &);
+    static Commit getLCA(const Commit &, const Commit &);
     static std::vector<Commit> getAllReachable(const Commit &);
 
     explicit Commit(std::set<Hash> parentHashes = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {});
@@ -44,6 +44,7 @@ public:
     time_t getTime() const;
     const std::string &getMsg() const;
     bool hasParent(const Commit &) const;
+    std::vector<Commit> getParentChain(const Commit &) const;
     void setProvider(std::weak_ptr<Provider>);
 };
 

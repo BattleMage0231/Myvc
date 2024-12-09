@@ -17,7 +17,7 @@ bool RepositoryStore::createAt(const fs::path &path) {
     return true;
 }
 
-RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {
+RepositoryStore::RepositoryStore(fs::path repoPath) : repoPath {std::move(repoPath)} {
     if(!fs::exists(getMyvcPath())) {
         THROW(".myvc does not exist");
     }
@@ -25,7 +25,7 @@ RepositoryStore::RepositoryStore(fs::path path) : path {std::move(path)} {
 }
 
 fs::path RepositoryStore::getMyvcPath() const {
-    return path / myvcName;
+    return repoPath / myvcName;
 }
 
 fs::path RepositoryStore::getObjectPath(const Hash &h) const {
@@ -98,7 +98,7 @@ bool RepositoryStore::createBlob(Blob &c) {
 }
 
 const fs::path &RepositoryStore::getPath() const {
-    return path;
+    return repoPath;
 }
 
 bool RepositoryStore::createBranch(std::string name, Hash commitHash) {
@@ -226,13 +226,17 @@ std::optional<Tree> RepositoryStore::getTreeAt(const fs::path &path) {
 
 Tree RepositoryStore::getWorkingTree() {
     if(workingTree) return getTree(workingTree.value()).value();
-    Tree t = getTreeAt(path).value();
+    Tree t = getTreeAt(repoPath).value();
     workingTree = t.hash();
     return t;
 }
 
-void RepositoryStore::applyOnWorkingTree(const TreeDiff &diff) {
-    for(const auto &[path, change] : diff.getChanges()) {
+void RepositoryStore::storeWorkingTree() {
+    if(!workingTree) return;
+    Tree cur = getTreeAt(repoPath).value();
+    Tree next = getWorkingTree();
+    TreeDiff diff = Tree::diff(cur, next);
+    for(const auto &[path, change] : diff) {
         if(change.type == TreeChange::Type::Add || change.type == TreeChange::Type::Modify) {
             fs::create_directories(path.parent_path());
             std::ofstream out {path};
@@ -244,12 +248,24 @@ void RepositoryStore::applyOnWorkingTree(const TreeDiff &diff) {
             }
         }
     }
-    workingTree = {};
+}
+
+void RepositoryStore::applyOnWorkingTree(const TreeDiff &diff) {
+    TreeBuilder builder = makeTreeBuilder(getWorkingTree());
+    for(const auto &[path, change] : diff) {
+        if(change.type == TreeChange::Type::Add || change.type == TreeChange::Type::Modify) {
+            Blob newBlob = change.newBlob;
+            createBlob(newBlob);
+            builder.updateEntry(path, Tree::Node {newBlob.hash(), true});
+        } else {
+            builder.deleteEntry(path);
+        }
+    }
+    workingTree = builder.getTree();
 }
 
 void RepositoryStore::setWorkingTree(const Tree &tree) {
-    TreeDiff diff = Tree::diff(getWorkingTree(), tree);
-    applyOnWorkingTree(diff);
+    workingTree = tree;
 }
 
 std::optional<Hash> RepositoryStore::resolvePartialHash(const std::string &partial) {
@@ -269,6 +285,7 @@ std::optional<Hash> RepositoryStore::resolvePartialHash(const std::string &parti
 }
 
 RepositoryStore::~RepositoryStore() {
+    if(workingTree) storeWorkingTree();
     if(index) store(getIndexPath(), index.value());
     if(head && head.value().hasState()) store(getHeadPath(), head.value());
     for(const auto &[h, optr] : objects) store(getObjectPath(h), *optr);

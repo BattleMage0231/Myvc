@@ -15,9 +15,9 @@
 #include "commands/reset.h"
 #include "commands/branch.h"
 #include "commands/checkout.h"
+#include "commands/merge.h"
 
 /*
-#include "commands/merge.h"
 #include "commands/cherrypick.h"
 #include "commands/rebase.h"
 */
@@ -51,9 +51,9 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
         return std::make_unique<Branch>(cur, args);
     } else if(subcmd == "checkout") {
         return std::make_unique<Checkout>(cur, args);
-    } /*else if(subcmd == "merge") {
+    } else if(subcmd == "merge") {
         return std::make_unique<Merge>(cur, args);
-    } else if(subcmd == "cherry-pick") {
+    } /*else if(subcmd == "cherry-pick") {
         return std::make_unique<Cherrypick>(cur, args);
     } else if(subcmd == "rebase") {
         return std::make_unique<Rebase>(cur, args);

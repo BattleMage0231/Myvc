@@ -26,7 +26,7 @@ class RepositoryStore :
     public Index::Provider,
     public TreeBuilder::Provider
 {
-    fs::path path;
+    fs::path repoPath;
 
     mutable std::map<Hash, std::unique_ptr<Object>> objects;
     mutable std::map<std::string, Branch> branches;
@@ -48,6 +48,8 @@ class RepositoryStore :
 
     template<typename T> bool createObject(T &);
     template<typename T> std::optional<T> loadObject(const Hash &) const;
+
+    void storeWorkingTree();
 
 public:
     static constexpr std::string myvcName = ".myvc";

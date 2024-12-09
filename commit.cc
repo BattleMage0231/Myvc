@@ -6,7 +6,7 @@
 
 using namespace myvc;
 
-std::optional<Commit> Commit::getLCA(const Commit &a, const Commit &b) {
+Commit Commit::getLCA(const Commit &a, const Commit &b) {
     std::set<Hash> aPool, bPool;
     std::vector<Commit> aCur {a}, bCur {b};
     while(!aCur.empty() || !bCur.empty()) {
@@ -38,7 +38,7 @@ std::optional<Commit> Commit::getLCA(const Commit &a, const Commit &b) {
         aCur = std::move(aNext);
         bCur = std::move(bNext);
     }
-    return {};
+    THROW("no ancestors");
 }
 
 std::vector<Commit> Commit::getAllReachable(const Commit &c) {
@@ -105,6 +105,18 @@ bool Commit::hasParent(const Commit &c) const {
         if(par.hasParent(c)) return true;
     }
     return false;
+}
+
+std::vector<Commit> Commit::getParentChain(const Commit &c) const {
+    if(*this == c) return {c};
+    for(const Commit &par : getParents()) {
+        std::vector<Commit> chain = par.getParentChain(c);
+        if(!chain.empty()) {
+            chain.emplace_back(*this);
+            return chain;
+        }
+    }
+    return {};
 }
 
 void Commit::setProvider(std::weak_ptr<Provider> prov) {
