@@ -205,12 +205,11 @@ std::optional<Blob> RepositoryStore::getBlobAt(const fs::path &path) {
     std::vector<char> vec;
     std::ifstream in {path, std::ios::binary};
     if(!in) return {};
-    in >> std::noskipws;
-    while(in) {
-        char c;
-        in >> c;
-        vec.emplace_back(c);
-    }
+    in.seekg(0, std::ios::end);
+    size_t sz = in.tellg();
+    in.seekg(0, std::ios::beg);
+    vec.resize(sz);
+    in.read(vec.data(), sz);
     Blob b {vec};
     createBlob(b);
     return b;
@@ -248,10 +247,13 @@ void RepositoryStore::storeWorkingTree() {
     TreeDiff diff = Tree::diff(cur, next);
     for(const auto &[path, change] : diff) {
         if(change.type == TreeChange::Type::Add || change.type == TreeChange::Type::Modify) {
+            debug_log("writing to " + static_cast<std::string>(path));
             if(!path.parent_path().empty()) fs::create_directories(path.parent_path());
-            std::ofstream out {path};
-            change.newBlob.write(out);
+            auto data = change.newBlob.getData();
+            std::ofstream out {path, std::ios::binary};
+            out.write(data.data(), data.size());
         } else {
+            debug_log("deleting " + static_cast<std::string>(path));
             fileops::remove(path);
             for(fs::path par = path.parent_path(); par != "." && fs::is_directory(par) && fs::is_empty(par); par = par.parent_path()) {
                 fileops::remove(par);
