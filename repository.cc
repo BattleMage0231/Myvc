@@ -1,6 +1,7 @@
 #include "repository.h"
 #include "treebuilder.h"
 #include "errors.h"
+#include "fileops.h"
 
 using namespace myvc;
 
@@ -33,7 +34,7 @@ void Repository::removeFromIndex(const std::vector<fs::path> &paths, bool cached
     TreeBuilder indexBuilder = makeTreeBuilder(index.getTree());
     for(const fs::path &p : paths) {
         indexBuilder.deleteEntry(p);
-        if(!cached) fs::remove_all(p);
+        if(!cached) fileops::remove_all(p);
     }
     index.setTree(indexBuilder.getTree().hash());
 }

@@ -7,6 +7,7 @@
 #include "commit.h"
 #include "../serialize.h"
 #include "../store.h"
+#include "../fileops.h"
 #include "merge.h"
 
 using namespace myvc::commands;
@@ -38,7 +39,7 @@ void Commit::process() {
         if(hasFlag("-m")) {
             msg = getFlagArgs("-m").at(0);
         } else {
-            fs::remove(editMessagePath);
+            myvc::fileops::remove(editMessagePath);
             std::system((editorName + " " + editMessagePath).c_str());
             std::ifstream editedFile(editMessagePath);
             std::getline(editedFile, msg);
@@ -50,6 +51,6 @@ void Commit::process() {
             otherParents.insert(Hash {s});
         }
         repo->commitIndex(std::move(msg), std::move(otherParents));
-        fs::remove(Merge::mergeInfoPath);
+        myvc::fileops::remove(Merge::mergeInfoPath);
     }
 }

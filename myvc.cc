@@ -18,6 +18,7 @@
 #include "commands/merge.h"
 #include "commands/cherrypick.h"
 #include "commands/rebase.h"
+#include "debug.h"
 
 using namespace myvc::commands;
 
@@ -61,6 +62,7 @@ std::unique_ptr<Command> createCommand(std::vector<std::string> args) {
 
 int main(int argc, char *argv[]) {
     std::vector<std::string> args {argv + 1, argv + argc};
+    myvc::debug_log("running in debug mode");
     try {
         std::unique_ptr<Command> cmd = createCommand(args);
         if(cmd) {

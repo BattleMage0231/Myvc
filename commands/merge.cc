@@ -4,6 +4,7 @@
 #include <fstream>
 #include "merge.h"
 #include "rebase.h"
+#include "../fileops.h"
 
 using namespace myvc;
 using namespace myvc::commands;
@@ -27,7 +28,7 @@ void Merge::process() {
     if(fs::exists(mergeInfoPath)) {
         if(hasFlag("--abort")) {
             expectNumberOfArgs(0);
-            fs::remove(mergeInfoPath);
+            fileops::remove(mergeInfoPath);
             std::cout << "Aborted." << std::endl;
             return;
         } else {

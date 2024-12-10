@@ -4,6 +4,7 @@
 #include <fstream>
 #include "rebase.h"
 #include "merge.h"
+#include "../fileops.h"
 
 using namespace myvc;
 using namespace myvc::commands;
@@ -30,7 +31,7 @@ void Rebase::process() {
     if(fs::exists(rebaseInfoPath)) {
         if(hasFlag("--abort")) {
             expectNumberOfArgs(0);
-            fs::remove(rebaseInfoPath);
+            fileops::remove(rebaseInfoPath);
             std::cout << "Aborted." << std::endl;
             return;
         } else if(hasFlag("--continue")) {

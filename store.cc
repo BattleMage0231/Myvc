@@ -4,6 +4,7 @@
 #include "store.h"
 #include "errors.h"
 #include "hash.h"
+#include "fileops.h"
 
 using namespace myvc;
 
@@ -177,7 +178,7 @@ bool RepositoryStore::deleteBranch(const std::string &branch) {
     fs::path branchPath = getBranchPath(branch);
     bool deleted = false;
     if(fs::exists(branchPath)) {
-        fs::remove(branchPath);
+        fileops::remove(branchPath);
         deleted = true;
     }
     if(branches.find(branch) != branches.end()) {
@@ -242,9 +243,9 @@ void RepositoryStore::storeWorkingTree() {
             std::ofstream out {path};
             change.newBlob.write(out);
         } else {
-            fs::remove(path);
+            fileops::remove(path);
             for(fs::path par = path.parent_path(); par != "." && fs::is_directory(par) && fs::is_empty(par); par = par.parent_path()) {
-                fs::remove(par);
+                fileops::remove(par);
             }
         }
     }
