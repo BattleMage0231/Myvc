@@ -51,7 +51,7 @@ void Merge::process() {
         repo->moveHeadSticky(c.hash());
         repo->setWorkingTree(c.getTree());
     } else {
-        auto maybe = repo->cherrypick(c.hash());
+        auto maybe = repo->merge(c.hash());
         if(maybe) {
             std::vector<fs::path> conflicts = maybe.value();
             if(conflicts.empty()) {
