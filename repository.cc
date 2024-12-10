@@ -14,13 +14,19 @@ void Repository::addToIndex(const std::vector<fs::path> &paths) {
         if(fs::exists(p)) {
             if(fs::is_directory(p)) {
                 Tree t = getTreeAt(p).value();
-                if(t.getNodes().empty()) {
+                if(p == ".") {
+                    indexBuilder.setTree(t);
+                } else if(t.getNodes().empty()) {
                     indexBuilder.deleteEntry(p);
                 } else {
-                    indexBuilder.updateEntry(p, Tree::Node {t.hash(), false});
+                    Tree::Node node {t.hash(), false};
+                    node.setProvider(getInstance());
+                    indexBuilder.updateEntry(p, std::move(node));
                 }
             } else {
-                indexBuilder.updateEntry(p, Tree::Node {getBlobAt(p).value().hash(), true});
+                Tree::Node node {getBlobAt(p).value().hash(), true};
+                node.setProvider(getInstance());
+                indexBuilder.updateEntry(p, std::move(node));
             }
         } else {
             indexBuilder.deleteEntry(p);
@@ -33,8 +39,14 @@ void Repository::removeFromIndex(const std::vector<fs::path> &paths, bool cached
     Index &index = getIndex();
     TreeBuilder indexBuilder = makeTreeBuilder(index.getTree());
     for(const fs::path &p : paths) {
-        indexBuilder.deleteEntry(p);
-        if(!cached) fileops::remove_all(p);
+        if(p == ".") {
+            Tree t;
+            createTree(t);
+            indexBuilder.setTree(t);
+        } else {
+            indexBuilder.deleteEntry(p);
+            if(!cached) fileops::remove_all(p);
+        }
     }
     index.setTree(indexBuilder.getTree().hash());
 }

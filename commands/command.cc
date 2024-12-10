@@ -2,6 +2,7 @@
 #include "command.h"
 #include "../head.h"
 #include "../store.h"
+#include "../debug.h"
 
 using namespace myvc;
 using namespace myvc::commands;
@@ -47,34 +48,46 @@ size_t Command::resolveNumber(const std::string &str) const {
     }
 }
 
-Commit Command::resolveSymbol(const std::string &str) const {
-    std::stringstream ss {str};
-    std::string token;
-    std::getline(ss, token, '^');
-    Commit c;
+Commit Command::resolvePureSymbol(const std::string &token) const {
     if(token == "HEAD") {
         Head &head = repo->getHead();
         if(head.hasState()) {
-            c = head.getCommit();
+            return head.getCommit();
         } else {
             throw command_error {"HEAD does not exist"};
         }
     } else {
         auto maybeBranch = repo->getBranch(token);
         if(maybeBranch) {
-            c = maybeBranch.value().get().getCommit();
+            return maybeBranch.value().get().getCommit();
         } else {
             try {
-                c = repo->getCommit(resolveHash(token)).value();
+                return repo->getCommit(resolveHash(token)).value();
             } catch(...) {
                 throw command_error {"invalid commit " + token};
             }
         }
     }
-    while(std::getline(ss, token, '^')) {
-        size_t n = token == "" ? 0 : (resolveNumber(token) - 1);
-        c = c.getParents().at(n);
+}
+
+Commit Command::resolveSymbol(const std::string &str) const {
+    std::vector<std::string> split;
+    std::stringstream ss {str};
+    std::string tok;
+    while(std::getline(ss, tok, '^')) {
+        split.emplace_back(std::move(tok));
     }
+    if(str.back() == '^') split.emplace_back("");
+    Commit c = resolvePureSymbol(split.at(0));
+    for(size_t i = 1; i < split.size(); ++i) {
+        size_t n = split.at(i) == "" ? 0 : resolveNumber(split.at(i));
+        auto parents = c.getParents();
+        if(n >= c.getParents().size()) {
+            throw command_error {"invalid commit reference " + str};
+        }
+        c = parents.at(n);
+    }
+    myvc::debug_log("resolved " + str + " to " + static_cast<std::string>(c.hash()));
     return c;
 }
 
@@ -89,12 +102,14 @@ fs::path Command::resolvePath(const std::string &p) const {
         fs::path res {p};
         if(!res.is_absolute()) res = basePath / res;
         res = res.lexically_normal().lexically_relative(repoPath);
-        if(res.empty()) {
+        if(res.empty() || *res.begin() == "..") {
             throw command_error {"path " + p + " not in repository at " + static_cast<std::string>(repoPath)};
         }
-        if(!res.lexically_relative(RepositoryStore::myvcName).empty()) {
+        fs::path rel = res.lexically_relative(RepositoryStore::myvcName);
+        if(!rel.empty() && *rel.begin() != "..") {
             throw command_error {"path " + p + " must not point to the myvc internal directory"};
         }
+        myvc::debug_log("resolve path " + p + " to " + static_cast<std::string>(res));
         return res;
     } catch(const command_error &e) {
         throw e;

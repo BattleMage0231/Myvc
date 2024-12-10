@@ -22,7 +22,7 @@ void Branch::createRules() {
 }
 
 void Branch::process() {
-    if(!hasFlag("-d")) {
+    if(hasFlag("-d")) {
         expectNumberOfArgs(1);
         Head &h = repo->getHead();
         if(h.hasState() && std::holds_alternative<std::reference_wrapper<myvc::Branch>>(h.get())) {

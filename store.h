@@ -35,8 +35,6 @@ class RepositoryStore :
     mutable std::optional<Hash> workingTree;
     mutable std::shared_ptr<RepositoryStore> self;
 
-    std::shared_ptr<RepositoryStore> getInstance() const;
-
     fs::path getMyvcPath() const;
     fs::path getObjectPath(const Hash &) const;
     fs::path getBranchPath(const std::string &) const;
@@ -50,6 +48,9 @@ class RepositoryStore :
     template<typename T> std::optional<T> loadObject(const Hash &) const;
 
     void storeWorkingTree();
+
+protected:
+    std::shared_ptr<RepositoryStore> getInstance() const;
 
 public:
     static constexpr std::string myvcName = ".myvc";

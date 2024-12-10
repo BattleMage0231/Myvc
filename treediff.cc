@@ -73,7 +73,7 @@ TreeDiff::TreeDiff(const std::map<fs::path, Blob> &base, const std::map<fs::path
             changes.insert_or_assign(path, TreeChange {TreeChange::Type::Delete, blob});
         } else {
             if(blob != other.at(path)) {
-                changes.insert_or_assign(path, TreeChange {TreeChange::Type::Modify, other.at(path), blob});
+                changes.insert_or_assign(path, TreeChange {TreeChange::Type::Modify, blob, other.at(path)});
             }
         }
     }

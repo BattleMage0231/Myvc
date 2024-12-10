@@ -1,6 +1,7 @@
 #include <fstream>
 #include <memory>
 #include <concepts>
+#include <exception>
 #include "store.h"
 #include "errors.h"
 #include "hash.h"
@@ -23,6 +24,10 @@ RepositoryStore::RepositoryStore(fs::path repoPath) : repoPath {std::move(repoPa
         THROW(".myvc does not exist");
     }
     self = std::shared_ptr<RepositoryStore>(this, [](auto *) {});
+}
+
+std::shared_ptr<RepositoryStore> RepositoryStore::getInstance() const {
+    return self;
 }
 
 fs::path RepositoryStore::getMyvcPath() const {
@@ -55,7 +60,7 @@ template<typename T> std::optional<T> RepositoryStore::load(const fs::path &path
     T t;
     t.read(in);
     if constexpr(HasProvider<T>) {
-        t.setProvider(self);
+        t.setProvider(getInstance());
     }
     return t;
 }
@@ -70,11 +75,14 @@ template<typename T> bool RepositoryStore::createObject(T &o) {
     Hash h = o.hash();
     if(objects.find(o) == objects.end()) {
         auto ptr = std::make_unique<T>(o);
-        if constexpr(HasProvider<T>) ptr->setProvider(self);
+        if constexpr(HasProvider<T>) {
+            o.setProvider(getInstance());
+            ptr->setProvider(getInstance());
+        }
         objects.insert_or_assign(h, std::move(ptr)); 
         return true;
     }
-    if constexpr(HasProvider<T>) o.setProvider(self);
+    if constexpr(HasProvider<T>) o.setProvider(getInstance());
     return false;
 }
 
@@ -105,7 +113,7 @@ const fs::path &RepositoryStore::getPath() const {
 bool RepositoryStore::createBranch(std::string name, Hash commitHash) {
     if(branches.find(name) == branches.end()) {
         Branch b { name, std::move(commitHash) };
-        b.setProvider(self);
+        b.setProvider(getInstance());
         branches.insert_or_assign(name, std::move(b));
         return true;
     }
@@ -128,7 +136,7 @@ std::optional<std::reference_wrapper<Branch>> RepositoryStore::getBranch(const s
     if(branches.find(name) != branches.end()) return branches.at(name);
     auto val = load<Branch>(getBranchPath(name));
     if(!val) return {};
-    branches.at(name) = std::move(val.value());
+    branches.insert_or_assign(name, std::move(val.value()));
     return branches.at(name);
 }
 
@@ -140,7 +148,7 @@ std::optional<const std::reference_wrapper<Branch>> RepositoryStore::getBranch(c
 
 std::vector<std::reference_wrapper<Branch>> RepositoryStore::getAllBranches() {
     std::vector<std::reference_wrapper<Branch>> res;
-    for(const auto &entry : fs::directory_iterator(getMyvcPath() / "refs")) {
+    for(const auto &entry : fs::directory_iterator(getMyvcPath() / "refs" / "heads")) {
         if(fs::is_regular_file(entry.status())) {
             res.emplace_back(getBranch(entry.path().filename()).value());
         }
@@ -155,7 +163,7 @@ Index &RepositoryStore::getIndex() {
         Tree t;
         createTree(t);
         index = Index {t.hash()};
-        index.value().setProvider(self);
+        index.value().setProvider(getInstance());
     } else {
         index = val.value();
     }
@@ -167,7 +175,7 @@ Head &RepositoryStore::getHead() {
     auto val = load<Head>(getHeadPath());
     if(!val) {
         head = Head {};
-        head.value().setProvider(self);
+        head.value().setProvider(getInstance());
     } else {
         head = val.value();
     }
@@ -189,8 +197,8 @@ bool RepositoryStore::deleteBranch(const std::string &branch) {
 }
 
 TreeBuilder RepositoryStore::makeTreeBuilder(Tree t) {
-    t.setProvider(self);
-    return TreeBuilder {self, t};
+    t.setProvider(getInstance());
+    return TreeBuilder {getInstance(), t};
 }
 
 std::optional<Blob> RepositoryStore::getBlobAt(const fs::path &path) {
@@ -212,7 +220,8 @@ std::optional<Tree> RepositoryStore::getTreeAt(const fs::path &path) {
     std::map<std::string, Tree::Node> nodes;
     if(!fs::is_directory(path)) return {};
     for(const auto &entry : fs::directory_iterator(path)) {
-        if(entry.path().filename() == ".myvc") continue;
+        auto name = entry.path().filename();
+        if(name == ".myvc" || name == "." || name == "..") continue;
         if(entry.is_directory()) {
             Tree child = getTreeAt(entry.path()).value();
             if(!child.getNodes().empty()) nodes[entry.path().filename()] = Tree::Node {child.hash(), false};
@@ -239,7 +248,7 @@ void RepositoryStore::storeWorkingTree() {
     TreeDiff diff = Tree::diff(cur, next);
     for(const auto &[path, change] : diff) {
         if(change.type == TreeChange::Type::Add || change.type == TreeChange::Type::Modify) {
-            fs::create_directories(path.parent_path());
+            if(!path.parent_path().empty()) fs::create_directories(path.parent_path());
             std::ofstream out {path};
             change.newBlob.write(out);
         } else {
@@ -257,7 +266,9 @@ void RepositoryStore::applyOnWorkingTree(const TreeDiff &diff) {
         if(change.type == TreeChange::Type::Add || change.type == TreeChange::Type::Modify) {
             Blob newBlob = change.newBlob;
             createBlob(newBlob);
-            builder.updateEntry(path, Tree::Node {newBlob.hash(), true});
+            Tree::Node node {newBlob.hash(), true};
+            node.setProvider(getInstance());
+            builder.updateEntry(path, std::move(node));
         } else {
             builder.deleteEntry(path);
         }
@@ -286,6 +297,10 @@ std::optional<Hash> RepositoryStore::resolvePartialHash(const std::string &parti
 }
 
 RepositoryStore::~RepositoryStore() {
+    if(std::uncaught_exceptions() > 0) {
+        debug_log("exception detected, state not being stored");
+        return;
+    }
     if(workingTree) storeWorkingTree();
     if(index) store(getIndexPath(), index.value());
     if(head && head.value().hasState()) store(getHeadPath(), head.value());

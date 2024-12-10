@@ -29,6 +29,8 @@ class Command {
     std::map<std::string, std::vector<std::string>> flagArgs;
     bool useRepo;
 
+    Commit resolvePureSymbol(const std::string &) const;
+
 protected:
     fs::path repoPath;
     std::shared_ptr<Repository> repo;

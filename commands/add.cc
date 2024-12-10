@@ -24,7 +24,7 @@ void Add::process() {
             fs::path adjusted = resolvePath(arg);
             bool inIndex = indexTree.getAtPath(adjusted).has_value();
             bool inWorkingTree = workingTree.getAtPath(adjusted).has_value();
-            if(!inIndex && !inWorkingTree) {
+            if(adjusted != "." && !inIndex && !inWorkingTree) {
                 throw command_error {"path " + static_cast<std::string>(adjusted) + " did not match any files"};
             }
             paths.emplace_back(std::move(adjusted));

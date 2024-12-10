@@ -30,9 +30,9 @@ void Diff::createRules() {
 static void printHunk(const myvc::Hunk &hunk) {
     for(const auto &change : hunk.changes) {
         if(change.type == Change::Type::Add) {
-            std::cout << '+';
+            std::cout << "+ ";
         } else {
-            std::cout << '-';
+            std::cout << "- ";
         }
         std::cout << change.content << std::endl;
     }
@@ -42,13 +42,13 @@ static void printDiff(const myvc::Diff &diff) {
     const std::vector<std::string> &base = diff.getBase();
     const std::vector<Hunk> &hunks = diff.getHunks();
     if(hunks.empty()) {
-        for(const auto &line : base) std::cout << line << std::endl;
+        for(const auto &line : base) std::cout << "  " << line << std::endl;
         return;
     }
     printHunk(hunks.front());
     for(size_t i = 1; i < hunks.size(); ++i) {
-        for(size_t j = hunks[i - 1].end; j < hunks[i].index; ++i) {
-            std::cout << base[j] << std::endl;
+        for(size_t j = hunks[i - 1].end; j < hunks[i].index; ++j) {
+            std::cout << "  " << base.at(j) << std::endl;
         }
         printHunk(hunks[i]);
     }
@@ -60,10 +60,10 @@ static void printTreeDiff(const TreeDiff &diff) {
             std::cout << "added file " << path << std::endl;
             std::cout << "+++ theirs" << std::endl;
         } else if(change.type == TreeChange::Type::Delete) {
-            std::cout << "deleted file ";
+            std::cout << "deleted file " << path << std::endl;;
             std::cout << "--- ours" << std::endl;
         } else {
-            std::cout << "modified file ";
+            std::cout << "modified file " << path << std::endl;;
             std::cout << "--- ours" << std::endl;
             std::cout << "+++ theirs" << std::endl;
         }

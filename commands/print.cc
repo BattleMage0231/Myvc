@@ -40,11 +40,14 @@ void Print::process() {
     std::string thing = args.at(0);
     if(thing == "head") {
         expectNumberOfArgs(1);
-        auto val = repo->getHead().get();
-        if(std::holds_alternative<std::reference_wrapper<Branch>>(val)) {
-            std::cout << "On branch " << std::get<std::reference_wrapper<Branch>>(val).get().getName() << std::endl;
-        } else if(std::holds_alternative<Commit>(val)) {
-            std::cout << "Detached at " << std::get<Commit>(val).hash() << std::endl;
+        Head &head = repo->getHead();
+        if(head.hasState()) {
+            auto val = head.get();
+            if(std::holds_alternative<std::reference_wrapper<Branch>>(val)) {
+                std::cout << "On branch " << std::get<std::reference_wrapper<Branch>>(val).get().getName() << std::endl;
+            } else {
+                std::cout << "Detached at " << std::get<Commit>(val).hash() << std::endl;
+            }
         } else {
             std::cout << "No head" << std::endl;
         }
@@ -64,7 +67,7 @@ void Print::process() {
         printTree(t);
     } else if(thing == "commit") {
         expectNumberOfArgs(2);
-        Commit c = repo->getCommit(resolveHash(args.at(1))).value();
+        Commit c = repo->getCommit(resolveSymbol(args.at(1))).value();
         std::cout << "Commit at " << c.hash() << std::endl;
         std::cout << "Parents:" << std::endl;
         for(const auto &h : c.getParentHashes()) {

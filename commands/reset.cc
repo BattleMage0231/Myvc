@@ -29,9 +29,14 @@ void Reset::process() {
     bool mixed = hasFlag("--mixed");
     bool hard = hasFlag("--hard");
     // move head
-    repo->moveHeadSticky(resolveSymbol(args.at(0)));
-    // reset index
     Head &head = repo->getHead();
+    auto maybeBranch = repo->getBranch(args.at(0));
+    if(maybeBranch) {
+        head.setBranch(maybeBranch.value().get().getName());
+    } else {
+        head.setCommit(resolveSymbol(args.at(0)));
+    }
+    // reset index
     if(mixed || hard) {
         repo->getIndex().setTree(head.getCommit().getTree().hash());
     }
