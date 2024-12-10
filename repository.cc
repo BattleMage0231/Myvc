@@ -75,21 +75,17 @@ void Repository::checkout(const std::string &branch) {
     setWorkingTree(b.getCommit().getTree());
 }
 
-std::vector<fs::path> Repository::merge(const Hash &hash) {
-    Commit headCommit = getHead().getCommit();
-    Commit c = getCommit(hash).value();
-    Commit lca = Commit::getLCA(headCommit, c);
-    TreeDiff diff1 = Tree::diff(lca.getTree(), headCommit.getTree());
-    TreeDiff diff2 = Tree::diff(lca.getTree(), c.getTree());
+std::optional<std::vector<fs::path>> Repository::threeWayMerge(const Tree &base, const Tree &first, const Tree &second) {
+    TreeDiff diff1 = Tree::diff(base, first);
+    TreeDiff diff2 = Tree::diff(base, second);
     auto res = TreeDiff::merge(diff1, diff2);
-    setWorkingTree(lca.getTree());
+    setWorkingTree(base);
     applyOnWorkingTree(res.first);
     Index &index = getIndex();
     index.setTree(getWorkingTree().hash());
     TreeDiff::Conflicts conflicts = res.second;
     if(conflicts.deleteConflicts.empty() && conflicts.modifyConflicts.empty()) {
-        commitIndex("Merge commit", {c.hash()});
-        return {};
+        return std::vector<fs::path> {};
     } else {
         std::vector<fs::path> conflicted;
         const auto &changes1 = diff1.getChanges(), &changes2 = diff2.getChanges();
@@ -140,4 +136,27 @@ std::vector<fs::path> Repository::merge(const Hash &hash) {
         applyOnWorkingTree(TreeDiff {changes});
         return conflicted;
     }
+}
+
+std::optional<std::vector<fs::path>> Repository::merge(const Hash &hash) {
+    Commit headCommit = getHead().getCommit();
+    Commit c = getCommit(hash).value();
+    Commit lca = Commit::getLCA(headCommit, c);
+    auto res = threeWayMerge(lca.getTree(), headCommit.getTree(), c.getTree());
+    if(res && res.value().empty()) {
+        commitIndex("Merge commit", {c.hash()});
+    }
+    return res;
+}
+
+std::optional<std::vector<fs::path>> Repository::cherrypick(const Hash &hash) {
+    Commit headCommit = getHead().getCommit();
+    Commit c = getCommit(hash).value();
+    auto cParents = c.getParents();
+    Tree parentTree = cParents.empty() ? Tree {} : cParents.at(0).getTree();
+    auto res = threeWayMerge(parentTree, headCommit.getTree(), c.getTree());
+    if(res && res.value().empty()) {
+        commitIndex("Cherry-pick commit");
+    }
+    return res;
 }

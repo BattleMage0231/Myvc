@@ -7,6 +7,8 @@
 namespace myvc {
 
 class Repository : public RepositoryStore {
+    std::optional<std::vector<fs::path>> threeWayMerge(const Tree &, const Tree &, const Tree &);
+
 public:
     static constexpr std::string defaultBranch = "main";
 
@@ -17,7 +19,8 @@ public:
     void commitIndex(std::string, std::set<Hash> otherParents = {});
     void moveHeadSticky(const Hash &);
     void checkout(const std::string &);
-    std::vector<fs::path> merge(const Hash &);
+    std::optional<std::vector<fs::path>> merge(const Hash &);
+    std::optional<std::vector<fs::path>> cherrypick(const Hash &);
 };
 
 }

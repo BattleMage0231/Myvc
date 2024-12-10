@@ -5,7 +5,7 @@
 namespace myvc::commands {
 
 class Cherrypick : public Command {
-    void printHelpMessage() override;
+    void printHelpMessage() const override;
     void process() override;
 
 public:

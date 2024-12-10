@@ -43,16 +43,19 @@ void Merge::process() {
         repo->moveHeadSticky(c.hash());
         repo->setWorkingTree(c.getTree());
     } else {
-        std::vector<fs::path> conflicts = repo->merge(c.hash());
-        if(conflicts.empty()) {
-            std::cout << "Merge conflict(s) detected." << std::endl << std::endl;
-            for(const auto &path : conflicts) {
-                std::cout << "CONFLICT: " << path << std::endl;
+        auto maybe = repo->cherrypick(c.hash());
+        if(maybe) {
+            std::vector<fs::path> conflicts = maybe.value();
+            if(conflicts.empty()) {
+                std::cout << "Merge completed successfully." << std::endl;
+            } else {
+                std::cout << "Merge conflicts detected, working directory modified." << std::endl;
+                for(const auto &path : conflicts) {
+                    std::cout << "CONFLICT: " << path << std::endl;
+                }
             }
-            std::ofstream out {mergeInfoPath};
-            out << c.hash();
         } else {
-            std::cout << "Merging completed successfully." << std::endl;
+            std::cout << "Would have no effect." << std::endl;
         }
     }
 }
