@@ -124,7 +124,7 @@ std::optional<std::vector<fs::path>> Repository::threeWayMerge(const Tree &base,
                 for(const auto &line : conf1.getOurs()) {
                     curChanges.emplace_back(Change { Change::Type::Delete, line });
                 }
-                curChanges.emplace_back(Change { Change::Type::Add, "<<<<<<< HEAD" });
+                curChanges.emplace_back(Change { Change::Type::Add, "<<<<<<<" });
                 for(const auto &line : conf1.getTheirs()) {
                     curChanges.emplace_back(Change { Change::Type::Add, line });
                 }
@@ -132,7 +132,7 @@ std::optional<std::vector<fs::path>> Repository::threeWayMerge(const Tree &base,
                 for(const auto &line : conf2.getTheirs()) {
                     curChanges.emplace_back(Change { Change::Type::Add, line });
                 }
-                curChanges.emplace_back(Change { Change::Type::Add, ">>>>>>> other" });
+                curChanges.emplace_back(Change { Change::Type::Add, ">>>>>>>" });
                 hunks.emplace_back(Hunk {conf1.index, std::move(curChanges)});
             }
             Diff d { tried.first.getBase(), hunks };

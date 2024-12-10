@@ -31,7 +31,7 @@ std::pair<TreeDiff, TreeDiff::Conflicts> TreeDiff::merge(const TreeDiff &a, cons
             if(otherChange.type == TreeChange::Type::Modify) {
                 Diff bDiff = Blob::diff(change.oldBlob, change.newBlob);
                 Diff aDiff = Blob::diff(otherChange.oldBlob, otherChange.newBlob);
-                auto res = Diff::merge(bDiff, aDiff);
+                auto res = Diff::merge(aDiff, bDiff);
                 if(res.second.empty()) {
                     changes.at(path) = TreeChange { TreeChange::Type::Modify, change.oldBlob, Blob {res.first.apply()} };
                 } else {
