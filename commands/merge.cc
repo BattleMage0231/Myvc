@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 #include "merge.h"
+#include "rebase.h"
 
 using namespace myvc;
 using namespace myvc::commands;
@@ -34,6 +35,9 @@ void Merge::process() {
     }
     expectNumberOfArgs(1);
     expectCleanState();
+    if(fs::exists(Rebase::rebaseInfoPath)) {
+        throw command_error {"cannot merge while rebase is ongoing"};
+    }
     Head &head = repo->getHead();
     Commit c = resolveSymbol(args.at(0));
     if(head.getCommit().hasParent(c)) {

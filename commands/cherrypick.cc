@@ -3,6 +3,8 @@
 #include <vector>
 #include <fstream>
 #include "cherrypick.h"
+#include "merge.h"
+#include "rebase.h"
 
 using namespace myvc;
 using namespace myvc::commands;
@@ -17,6 +19,11 @@ void Cherrypick::printHelpMessage() const {
 void Cherrypick::process() {
     expectNumberOfArgs(1);
     expectCleanState();
+    if(fs::exists(Rebase::rebaseInfoPath)) {
+        throw command_error {"cannot cherry-pick while rebase is ongoing"};
+    } else if(fs::exists(Merge::mergeInfoPath)) {
+        throw command_error {"cannot cherry-pick while merge is ongoing"};
+    }
     Commit c = resolveSymbol(args.at(0));
     if(c.getParents().size() > 1) {
         throw command_error {"cannot cherry-pick a merge commit"};

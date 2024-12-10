@@ -7,6 +7,7 @@
 #include "commit.h"
 #include "../serialize.h"
 #include "../store.h"
+#include "merge.h"
 
 using namespace myvc::commands;
 
@@ -39,15 +40,13 @@ void Commit::process() {
             std::ifstream editedFile(editMessagePath);
             std::getline(editedFile, msg);
         }
-        repo->commitIndex(std::move(msg));
-        /* todo
-        if(fs::exists(".myvc/MERGE_INFO")) {
-            std::ifstream in {".myvc/MERGE_INFO"};
-            Hash h;
-            read_hash(in, h);
-            parents.insert(h);
-            fs::remove(".myvc/MERGE_INFO");
+        std::set<Hash> otherParents;
+        if(fs::exists(Merge::mergeInfoPath)) {
+            std::ifstream in {Merge::mergeInfoPath};
+            std::string s; in >> s;
+            otherParents.insert(Hash {s});
         }
-        */
+        repo->commitIndex(std::move(msg), std::move(otherParents));
+        fs::remove(Merge::mergeInfoPath);
     }
 }

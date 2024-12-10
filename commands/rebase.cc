@@ -3,56 +3,72 @@
 #include <vector>
 #include <fstream>
 #include "rebase.h"
-#include "../errors.h"
+#include "merge.h"
 
 using namespace myvc;
 using namespace myvc::commands;
 
-Rebase::Rebase(fs::path repoPath, std::vector<std::string> rawArgs)
-    : Command {std::move(repoPath), std::move(rawArgs)} {}
+Rebase::Rebase(fs::path basePath, std::vector<std::string> rawArgs)
+    : Command {std::move(basePath), std::move(rawArgs)} {}
 
-void Rebase::printHelpMessage() {
+void Rebase::printHelpMessage() const {
     std::cerr << "usage: myvc rebase [--continue] [--abort] [commit]" << std::endl;
 }
 
 void Rebase::createRules() {
     Command::createRules();
-    flagRules["--continue"] = 0;
-    flagRules["--abort"] = 0;
-}
-
-bool Rebase::rebase_from(const Commit &start, const Commit &cur) {
-    if(start == cur) return true;
-    if(cur.getParents().size() > 1) throw not_implemented {};
-    Commit parent = cur.getParents().at(0);
-    if(!rebase_from(start, parent)) return false;
-    // basically cherry pick
-    throw not_implemented {};
+    addFlagRule("--continue");
+    addFlagRule("--abort");
 }
 
 void Rebase::process() {
-    if(flagArgs.find("--abort") != flagArgs.end()) {
-        fs::remove(".myvc/REBASE_INFO");
-        std::cout << "Aborted." << std::endl;
-        return;
-    }
-    if(flagArgs.find("--continue") != flagArgs.end()) {
-        if(!fs::exists(".myvc/REBASE_INFO")) {
-            throw command_error {"nothing to continue"};
+    std::vector<Hash> chain;
+    if(fs::exists(rebaseInfoPath)) {
+        if(hasFlag("--abort")) {
+            expectNumberOfArgs(0);
+            fs::remove(rebaseInfoPath);
+            std::cout << "Aborted." << std::endl;
+            return;
+        } else if(hasFlag("--continue")) {
+            expectNumberOfArgs(0);
+            std::ifstream in {rebaseInfoPath};
+            size_t n; in >> n;
+            for(size_t i = 0; i < n; ++i) {
+                std::string s; in >> s;
+                chain.emplace_back(Hash {s});
+            }
+        } else {
+            throw command_error {"ongoing rebase detected, use --continue if you want to continue"};
         }
-        Hash start, cur;
-        std::ifstream in {".myvc/REBASE_INFO", std::ios::binary};
-        read_hash(in, start);
-        read_hash(in, cur);
-        rebase_from(store->getCommit(start).value(), store->getCommit(cur).value());
-        return;
+    } else if(hasFlag("--abort") || hasFlag("--continue")) {
+        throw command_error {"no ongoing rebase"};
+    } else {
+        if(fs::exists(Merge::mergeInfoPath)) {
+            throw command_error {"cannot rebase while merge is ongoing"};
+        }
+        expectNumberOfArgs(1);
+        expectCleanState();
+        Commit c = resolveSymbol(args.at(0));
+        Commit base = Commit::getLCA(c, repo->getHead().getCommit());
+        for(const Commit &c : c.getParentChain(base)) {
+            chain.emplace_back(c.hash());
+        }
+        chain.erase(chain.begin());
     }
-    if(args.size() != 1) throw command_error {"invalid number of arguments"};
-    ensureNoUncommitted();
-    Head head = resolveHead();
-    Commit c = resolveSymbol(args.at(0));
-    auto lca = Commit::getLCA(*head, c);
-    if(!lca) throw command_error {"no lca exists between the two commits"};
-    Commit lcaCommit = lca.value();
-    rebase_from(lcaCommit, c);
+    for(size_t i = 0; i < chain.size(); ++i) {
+        std::vector<fs::path> res = repo->cherrypick(chain.at(i)).value();
+        if(!res.empty()) {
+            std::cout << "Rebase conflicts detected, working directory modified." << std::endl;
+            for(const auto &path : res) {
+                std::cout << "CONFLICT: " << path << std::endl;
+            }
+            std::ofstream out {rebaseInfoPath};
+            out << (chain.size() - i - 1) << std::endl;
+            for(size_t j = i + 1; j < chain.size(); ++j) {
+                out << chain.at(j) << std::endl;
+            }
+            return;
+        }
+    }
+    std::cout << "Rebase completed successfully" << std::endl;
 }

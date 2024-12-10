@@ -175,8 +175,11 @@ void Command::expectIsFile(const fs::path &p) const {
 void Command::expectCleanState() const {
     Index &index = repo->getIndex();
     Head &head = repo->getHead();
-    Tree headTree = head.hasState() ? head.getCommit().getTree() : Tree {};
-    TreeDiff diff1 = Tree::diff(repo->getWorkingTree(), index.getTree()), diff2 = Tree::diff(index.getTree(), headTree);
+    if(!head.hasState()) {
+        throw command_error {"nonexistent head"};
+    }
+    TreeDiff diff1 = Tree::diff(repo->getWorkingTree(), index.getTree());
+    TreeDiff diff2 = Tree::diff(index.getTree(), head.getCommit().getTree());
     if(!diff1.getChanges().empty() || !diff2.getChanges().empty()) {
         throw command_error {"clean working directory and index expected"};
     }
