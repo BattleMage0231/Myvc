@@ -8,6 +8,7 @@ Init::Init(fs::path basePath, std::vector<std::string> rawArgs)
 
 void Init::printHelpMessage() const {
     std::cerr << "usage: myvc init" << std::endl;
+    std::cerr << "Initializes a new repository." << std::endl;
 }
 
 void Init::process() {

@@ -10,6 +10,10 @@ Branch::Branch(fs::path basePath, std::vector<std::string> rawArgs)
 
 void Branch::printHelpMessage() const {
     std::cerr << "usage: myvc branch [-d] [name]" << std::endl;
+    std::cerr << "Performs operations on branches." << std::endl;
+    std::cerr << "branch with no arguments lists all branches." << std::endl;
+    std::cerr << "branch -d name deletes the given branch." << std::endl;
+    std::cerr << "branch name creates a new branch." << std::endl;
 }
 
 void Branch::createRules() {

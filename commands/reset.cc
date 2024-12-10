@@ -11,6 +11,10 @@ Reset::Reset(fs::path basePath, std::vector<std::string> rawArgs)
 
 void Reset::printHelpMessage() const {
     std::cerr << "usage: myvc reset [--soft] [--mixed] [--hard] commit" << std::endl;
+    std::cerr << "Resets the state of the repository to a given commit." << std::endl;
+    std::cerr << "reset commit or reset --soft commit moves HEAD to the given commit." << std::endl;
+    std::cerr << "reset --mixed commit moves HEAD and resets the index." << std::endl;
+    std::cerr << "reset --hard commit moves HEAD, resets the index, and resets the working directory." << std::endl;
 }
 
 void Reset::createRules() {

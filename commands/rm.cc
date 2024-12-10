@@ -11,6 +11,10 @@ Rm::Rm(fs::path basePath, std::vector<std::string> rawArgs)
 
 void Rm::printHelpMessage() const {
     std::cerr << "usage: myvc rm [-r] [--cached] path1 ... pathn" << std::endl;
+    std::cerr << "Removes files from the index and deletes them in the working directory." << std::endl;
+    std::cerr << "rm path1 ... pathn unstages and deletes the given files." << std::endl;
+    std::cerr << "rm -r path1 ... pathn unstages and deletes the given files and directories." << std::endl;
+    std::cerr << "rm --cached path1 ... pathn unstages the given files without deleting them." << std::endl;
 }
 
 void Rm::createRules() {

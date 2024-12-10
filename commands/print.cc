@@ -13,9 +13,10 @@ Print::Print(fs::path basePath, std::vector<std::string> rawArgs)
 
 void Print::printHelpMessage() const {
     std::cerr << "usage: myvc print type [id]" << std::endl;
+    std::cerr << "Displays an entity of type head, index, commit, blob, tree, wt, branch." << std::endl;
 }
 
-std::string pad(size_t n) {
+static std::string pad(size_t n) {
     std::stringstream ss;
     for(size_t i = 0; i < n; ++i) ss << ' ';
     return ss.str();

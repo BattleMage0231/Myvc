@@ -11,6 +11,7 @@ Checkout::Checkout(fs::path basePath, std::vector<std::string> rawArgs)
 
 void Checkout::printHelpMessage() const {
     std::cerr << "usage: myvc checkout name" << std::endl;
+    std::cerr << "Moves HEAD to a given branch and resets the working directory." << std::endl;
 }
 
 void Checkout::process() {

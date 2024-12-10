@@ -10,6 +10,7 @@ Status::Status(fs::path basePath, std::vector<std::string> rawArgs)
 
 void Status::printHelpMessage() const {
     std::cerr << "usage: myvc status" << std::endl;
+    std::cerr << "Displays the current status of HEAD, the index, and the working directory." << std::endl;
 }
 
 void Status::process() {

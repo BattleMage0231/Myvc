@@ -13,6 +13,9 @@ Merge::Merge(fs::path basePath, std::vector<std::string> rawArgs)
 
 void Merge::printHelpMessage() const {
     std::cerr << "usage: myvc merge [--abort] [commit]" << std::endl;
+    std::cerr << "Merges a commit with HEAD, creating a new merge commit." << std::endl;
+    std::cerr << "merge commit creates a new merge commit from HEAD and the given commit." << std::endl;
+    std::cerr << "merge --abort stops the current merge." << std::endl;
 }
 
 void Merge::createRules() {

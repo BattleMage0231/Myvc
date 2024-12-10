@@ -13,6 +13,10 @@ Rebase::Rebase(fs::path basePath, std::vector<std::string> rawArgs)
 
 void Rebase::printHelpMessage() const {
     std::cerr << "usage: myvc rebase [--continue] [--abort] [commit]" << std::endl;
+    std::cerr << "Runs cherry-pick for every commit starting from the base of HEAD and the given commit." << std::endl;
+    std::cerr << "rebase commit rebases starting from a given commit and HEAD." << std::endl;
+    std::cerr << "rebase --continue continues the ongoing rebase." << std::endl;
+    std::cerr << "rebase --abort stops the ongoing rebase." << std::endl;
 }
 
 void Rebase::createRules() {

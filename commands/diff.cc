@@ -13,6 +13,12 @@ Diff::Diff(fs::path basePath, std::vector<std::string> rawArgs)
 
 void Diff::printHelpMessage() const {
     std::cerr << "usage: myvc diff [--no-index] [--cached] commit1 [commit2]" << std::endl;
+    std::cerr << "Computes the diff of two entities." << std::endl;
+    std::cerr << "diff with no arguments compares the working tree with the index." << std::endl;
+    std::cerr << "diff commit compares the working directory with the given commit." << std::endl;
+    std::cerr << "diff --cached commit compares the index with the given commit." << std::endl;
+    std::cerr << "diff commit1 commit2 compares the given commits." << std::endl;
+    std::cerr << "diff --no-index path1 path2 compares two files in the working directory." << std::endl;
 }
 
 void Diff::createRules() {

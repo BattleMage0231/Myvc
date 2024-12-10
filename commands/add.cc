@@ -9,12 +9,8 @@ Add::Add(fs::path basePath, std::vector<std::string> rawArgs)
     : Command {std::move(basePath), std::move(rawArgs)} {}
 
 void Add::printHelpMessage() const {
-    std::cerr << "usage: myvc add [-r] path1 ... pathn" << std::endl;
-}
-
-void Add::createRules() {
-    Command::createRules();
-    addFlagRule("-r");
+    std::cerr << "usage: myvc add path1 ... pathn" << std::endl;
+    std::cerr << "Adds the files or directories at the given paths to the index." << std::endl;
 }
 
 void Add::process() {

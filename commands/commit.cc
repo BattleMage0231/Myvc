@@ -16,6 +16,9 @@ Commit::Commit(fs::path basePath, std::vector<std::string> rawArgs)
 
 void Commit::printHelpMessage() const {
     std::cerr << "usage: myvc commit [-m msg]" << std::endl;
+    std::cerr << "Creates a new commit at HEAD applying the changes in the index." << std::endl;
+    std::cerr << "commit -m message creates a commit with the given message." << std::endl;
+    std::cerr << "commit creates a commit, opening a text editor for a commit message." << std::endl;
 }
 
 void Commit::createRules() {

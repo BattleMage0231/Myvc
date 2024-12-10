@@ -14,6 +14,7 @@ Cherrypick::Cherrypick(fs::path repoPath, std::vector<std::string> rawArgs)
 
 void Cherrypick::printHelpMessage() const {
     std::cerr << "usage: myvc cherry-pick commit" << std::endl;
+    std::cerr << "Creates a new commit at HEAD applying the changes in a given commit." << std::endl;
 }
 
 void Cherrypick::process() {

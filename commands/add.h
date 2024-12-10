@@ -6,7 +6,6 @@ namespace myvc::commands {
 
 class Add : public Command {
     void printHelpMessage() const override;
-    void createRules() override;
     void process() override;
 
 public:
