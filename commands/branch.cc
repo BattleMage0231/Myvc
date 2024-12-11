@@ -28,7 +28,7 @@ void Branch::process() {
         if(h.hasState() && std::holds_alternative<std::reference_wrapper<myvc::Branch>>(h.get())) {
             myvc::Branch &b = std::get<std::reference_wrapper<myvc::Branch>>(h.get());
             if(b.getName() == args.at(0)) {
-                h.setCommit(b.getCommit());
+                h.setCommit(b.getCommit().hash());
             }
         }
         repo->deleteBranch(args.at(0));
@@ -59,7 +59,7 @@ void Branch::process() {
         if(!repo->getHead().hasState()) {
             throw command_error {"nonexistent HEAD"};
         }
-        repo->createBranch(name, repo->getHead().getCommit());
+        repo->createBranch(name, repo->getHead().getCommit().hash());
     } else {
         throw command_error {"too many arguments"};
     }

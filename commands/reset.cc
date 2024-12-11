@@ -30,7 +30,7 @@ void Reset::process() {
     bool hard = hasFlag("--hard");
     // move head
     Head &head = repo->getHead();
-    head.setCommit(resolveSymbol(args.at(0)));
+    head.setCommit(resolveSymbol(args.at(0)).hash());
     // reset index
     if(mixed || hard) {
         repo->getIndex().setTree(head.getCommit().getTree().hash());

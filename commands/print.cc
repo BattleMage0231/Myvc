@@ -67,7 +67,7 @@ void Print::process() {
         printTree(t);
     } else if(thing == "commit") {
         expectNumberOfArgs(2);
-        Commit c = repo->getCommit(resolveSymbol(args.at(1))).value();
+        Commit c = resolveSymbol(args.at(1));
         std::cout << "Commit at " << c.hash() << std::endl;
         std::cout << "Parents:" << std::endl;
         for(const auto &h : c.getParentHashes()) {

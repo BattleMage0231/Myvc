@@ -3,18 +3,6 @@
 
 using namespace myvc;
 
-Hash Serializable::hash() const {
-    std::stringstream ss;
-    write(ss);
-    std::string str = ss.str();
-    std::vector<char> data {str.begin(), str.end()};
-    return Hash { std::move(data) };
-}
-
-Serializable::operator myvc::Hash() const {
-    return hash();
-}
-
 void myvc::write_string(std::ostream &out, const std::string &str) {
     write_raw(out, str.size());
     out.write(str.c_str(), str.size());

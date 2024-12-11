@@ -73,7 +73,7 @@ void RepositoryStore::store(const fs::path &path, const Serializable &s) {
 
 template<typename T> bool RepositoryStore::createObject(T &o) {
     Hash h = o.hash();
-    if(objects.find(o) == objects.end()) {
+    if(objects.find(h) == objects.end()) {
         auto ptr = std::make_unique<T>(o);
         if constexpr(HasProvider<T>) {
             o.setProvider(getInstance());
@@ -275,11 +275,11 @@ void RepositoryStore::applyOnWorkingTree(const TreeDiff &diff) {
             builder.deleteEntry(path);
         }
     }
-    workingTree = builder.getTree();
+    workingTree = builder.getTree().hash();
 }
 
 void RepositoryStore::setWorkingTree(const Tree &tree) {
-    workingTree = tree;
+    workingTree = tree.hash();
 }
 
 std::optional<Hash> RepositoryStore::resolvePartialHash(const std::string &partial) {

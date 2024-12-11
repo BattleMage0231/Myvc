@@ -11,9 +11,6 @@ public:
     virtual void write(std::ostream &) const = 0;
     virtual void read(std::istream &) = 0;
 
-    virtual Hash hash() const;
-    operator myvc::Hash() const;
-
     virtual ~Serializable() {}
 };
 
