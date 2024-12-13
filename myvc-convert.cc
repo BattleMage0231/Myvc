@@ -115,7 +115,7 @@ void create_head_and_index(git_repository *repo, Repository &myvcRepo) {
     git_repository_head(&head, repo);
     git_commit *commit;
     Head &h = myvcRepo.getHead();
-    if(git_reference_type(head) == GIT_REF_COMMIT) {
+    if(git_reference_type(head) == GIT_REFERENCE_DIRECT) {
         git_reference_peel((git_object **) &commit, head, GIT_OBJECT_COMMIT);
         h.setCommit(create_commit(repo, commit, myvcRepo));
         git_commit_free(commit);
@@ -127,11 +127,11 @@ void create_head_and_index(git_repository *repo, Repository &myvcRepo) {
 }
 
 int main(int argc, char *argv[]) {
-    const char *repoPath = argv[1];
+    const char *repoPath = (argc == 1) ? "." : argv[1];
     git_repository *repo;
     git_libgit2_init();
     git_repository_open(&repo, repoPath);
-    Repository myvcRepo {"."};
+    Repository myvcRepo {repoPath};
     create_objects(repo, myvcRepo);
     create_branches(repo, myvcRepo);
     create_head_and_index(repo, myvcRepo);
