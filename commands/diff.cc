@@ -54,20 +54,33 @@ static void printDiff(const myvc::Diff &diff) {
     }
 }
 
+static bool isBinary(const Blob &b) {
+    if(b.getData().empty()) return false;
+    size_t np = 0;
+    for(char byte : b.getData()) {
+        if(!std::isprint(byte) && byte != '\n' && byte != '\t') ++np;
+    }
+    return static_cast<double>(np) / b.getData().size() > 0.3;
+}
+
 static void printTreeDiff(const TreeDiff &diff) {
     for(const auto &[path, change] : diff.getChanges()) {
+        bool binary = isBinary(change.oldBlob) || isBinary(change.newBlob);
         if(change.type == TreeChange::Type::Add) {
             std::cout << "added file " << path << std::endl;
-            std::cout << "+++ theirs" << std::endl;
+            if(!binary) std::cout << "+++ theirs" << std::endl;
         } else if(change.type == TreeChange::Type::Delete) {
             std::cout << "deleted file " << path << std::endl;;
-            std::cout << "--- ours" << std::endl;
+            if(!binary) std::cout << "--- ours" << std::endl;
         } else {
             std::cout << "modified file " << path << std::endl;;
-            std::cout << "--- ours" << std::endl;
-            std::cout << "+++ theirs" << std::endl;
+            if(!binary) {
+                std::cout << "--- ours" << std::endl;
+                std::cout << "+++ theirs" << std::endl;
+            }
         }
-        printDiff(Blob::diff(change.oldBlob, change.newBlob));
+        if(binary) std::cout << "binary files differ" << std::endl;
+        else printDiff(Blob::diff(change.oldBlob, change.newBlob));
     }
 }
 

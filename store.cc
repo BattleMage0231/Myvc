@@ -220,7 +220,7 @@ std::optional<Tree> RepositoryStore::getTreeAt(const fs::path &path) {
     if(!fs::is_directory(path)) return {};
     for(const auto &entry : fs::directory_iterator(path)) {
         auto name = entry.path().filename();
-        if(name == ".myvc" || name == "." || name == "..") continue;
+        if(name == RepositoryStore::myvcName || name == ".git" || name == "." || name == "..") continue;
         if(entry.is_directory()) {
             Tree child = getTreeAt(entry.path()).value();
             if(!child.getNodes().empty()) nodes[entry.path().filename()] = Tree::Node {child.hash(), false};

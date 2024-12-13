@@ -115,7 +115,8 @@ void create_head_and_index(git_repository *repo, Repository &myvcRepo) {
     git_repository_head(&head, repo);
     git_commit *commit;
     Head &h = myvcRepo.getHead();
-    if(git_reference_peel((git_object **) &commit, head, GIT_OBJECT_COMMIT) == 0) {
+    if(git_reference_type(head) == GIT_REF_COMMIT) {
+        git_reference_peel((git_object **) &commit, head, GIT_OBJECT_COMMIT);
         h.setCommit(create_commit(repo, commit, myvcRepo));
         git_commit_free(commit);
     } else {
