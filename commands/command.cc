@@ -71,6 +71,7 @@ Commit Command::resolvePureSymbol(const std::string &token) const {
 }
 
 Commit Command::resolveSymbol(const std::string &str) const {
+    if(str.empty()) throw command_error {"invalid commit reference"};
     std::vector<std::string> split;
     std::stringstream ss {str};
     std::string tok;
@@ -78,7 +79,6 @@ Commit Command::resolveSymbol(const std::string &str) const {
         split.emplace_back(std::move(tok));
     }
     if(str.back() == '^') split.emplace_back("");
-    if(split.empty()) throw command_error {"invalid commit reference"};
     Commit c = resolvePureSymbol(split.at(0));
     for(size_t i = 1; i < split.size(); ++i) {
         size_t n = split.at(i) == "" ? 0 : resolveNumber(split.at(i));
