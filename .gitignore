@@ -9,4 +9,3 @@ commands/*.d
 .myvc/
 test_repo/
 .vscode/
-myvc-convert
