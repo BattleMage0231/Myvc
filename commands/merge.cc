@@ -61,6 +61,8 @@ void Merge::process() {
                 for(const auto &path : conflicts) {
                     std::cout << "CONFLICT: " << path << std::endl;
                 }
+                std::ofstream out {mergeInfoPath};
+                out << c.hash() << std::endl;
             }
         } else {
             std::cout << "Would have no effect." << std::endl;
