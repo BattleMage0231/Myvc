@@ -31,7 +31,7 @@ private:
 
 public:
     static Commit getLCA(const Commit &, const Commit &);
-    static std::vector<Commit> getAllReachable(const Commit &);
+    static std::set<Commit> getAllReachable(const Commit &);
 
     explicit Commit(std::set<Hash> parentHashes = {}, Hash treeHash = {}, time_t time = {}, std::string msg = {});
 

@@ -69,7 +69,8 @@ void Log::process() {
         prettyprint(c);
         return;
     }
-    std::vector<Commit> commits = Commit::getAllReachable(c);
+    auto commitSet = Commit::getAllReachable(c);
+    std::vector<Commit> commits {commitSet.begin(), commitSet.end()};
     std::sort(commits.begin(), commits.end(), [](const Commit &a, const Commit &b) {
         return a.getTime() > b.getTime();
     });

@@ -41,11 +41,11 @@ Commit Commit::getLCA(const Commit &a, const Commit &b) {
     THROW("no ancestors");
 }
 
-std::vector<Commit> Commit::getAllReachable(const Commit &c) {
-    std::vector<Commit> res {c};
+std::set<Commit> Commit::getAllReachable(const Commit &c) {
+    std::set<Commit> res {c};
     for(const auto &parent : c.getParents()) {
         auto nested = getAllReachable(parent);
-        res.insert(res.end(), nested.begin(), nested.end());
+        res.insert(nested.begin(), nested.end());
     }
     return res;
 }

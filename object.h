@@ -20,8 +20,12 @@ public:
         return cachedHash.value();
     }
 
+    auto operator<=>(const Object &other) const {
+        return hash() <=> other.hash();
+    }
+
     bool operator==(const Object &other) const {
-        return hash() == other.hash();
+        return (*this <=> other) == 0;
     }
 };
 
