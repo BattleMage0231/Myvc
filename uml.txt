@@ -1,0 +1,282 @@
+@startuml
+!theme hacker
+skinparam classAttributeIconSize 0
+skinparam DefaultFontSize 18
+skinparam classFontSize 24
+interface Serializable {
+{abstract} +write(ostream &)
+{abstract} +read(istream &)
+}
+abstract class Object {
++hash(): Hash
+}
+Serializable <|-- Object
+class Blob {
+-data: vector<char>
+{static} +diff(Blob, Blob): Diff
+}
+Object <|-- Blob
+class Commit {
+-parentHashes: set<Hash>
+-treeHash: Hash
+-time: Time
+-msg: String
+{static} +getLCA(Commit, Commit): Commit
+{static} +getAllReachable(Commit): vector<Commit>
++getParents(): vector<Commit>
++hasParent(Commit): bool
++getParentChain(Commit): vector<Commit>
++setProvider(Commit::Provider)
+}
+Object <|-- Commit
+class Tree {
+{static} +diff(Tree, Tree): TreeDiff
++getAllFiles(): map<path, Blob>
++getAtPath(path): optional<variant<Tree, Blob>>
++begin(): Iterator
++end(): Iterator
++setProvider(Tree::Provider)
+}
+Object <|-- Tree
+class Branch {
+-name: string
+-commitHash: Hash
++getCommit(): Commit
++setProvider(Branch::Provider)
+}
+Serializable <|-- Branch
+class Index {
+-treeHash: Hash
++getTree(): Tree
++setProvider(Index::Provider)
+}
+Serializable <|-- Index
+class Head {
+-state: variant<monostate, string, Hash>
++hasState(): bool
++get(): variant<Branch, Commit>
++setProvider(Head::Provider)
+}
+Serializable <|-- Head
+interface Commit::Provider {
+{abstract} +getCommit(Hash): optional<Commit>
+{abstract} +getTree(Hash): optional<Tree>
+}
+Commit o-- Commit::Provider
+interface Tree::Provider {
+{abstract} +getBlob(Hash): optional<Blob>
+{abstract} +getTree(Hash): optional<Tree>
+}
+Tree o-- Tree::Provider
+interface Branch::Provider {
+{abstract} +getCommit(Hash): optional<Commit>
+}
+Branch o-- Branch::Provider
+interface Head::Provider {
+{abstract} +getCommit(Hash): optional<Commit>
+{abstract} +getBranch(string): Branch
+}
+Head o-- Head::Provider
+interface Index::Provider {
+{abstract} +getTree(Hash): optional<Tree>
+}
+Index o-- Index::Provider
+class RepositoryStore {
+-repoPath: path
+{static} +myvcName: string
+{static} +existsAt(path): bool
+{static} +createAt(path): bool
++createCommit(Commit): bool
++createTree(Tree): bool
++createBlob(Blob): bool
++createBranch(string, Hash): bool
++getCommit(Hash): optional<Commit>
++getTree(Hash): optional<Tree>
++getBlob(Hash): optional<Blob>
++getBranch(string): optional<Branch>
++getAllBranches(): vector<Branch>
++getIndex(): Index
++getHead(): Head
++deleteBranch(string): bool
++makeTreeBuilder(Tree): TreeBuilder
++getBlobAt(path): optional<Blob>
++getTreeAt(path): optional<Tree>
++getWorkingTree(): Tree
++applyOnWorkingTree(TreeDiff)
++setWorkingTree(Tree)
++resolvePartialHash(string): optional<Hash>
+}
+Commit::Provider <|-- RepositoryStore
+Branch::Provider <|-- RepositoryStore
+Head::Provider <|-- RepositoryStore
+Index::Provider <|-- RepositoryStore
+class TreeBuilder {
++updateEntry(path, Tree::Node)
++deleteEntry(path): bool
++getEntry(path): optional<variant<Tree, Blob>>
+}
+interface TreeBuilder::Provider {
+{abstract} +createTree(Tree): bool
+}
+TreeBuilder o-- Tree
+TreeBuilder o-right- TreeBuilder::Provider
+TreeBuilder::Provider <|-- RepositoryStore
+Tree::Provider <|-- TreeBuilder::Provider
+class Tree::Node {
+-dataHash: Hash
+-blob: bool
++getData(): variant<Tree, Blob>
+}
+Tree::Node o-- Tree::Provider
+Serializable o-- Tree::Node
+Tree "0..*" *-- Tree::Node
+enum Change::Type {
+Add
+Delete
+}
+struct Change {
++content: string
+}
+struct Hunk {
++index: size_t
++end: size_t
++getOurs(): vector<string>
++getTheirs(): vector<string>
+}
+class Diff {
+-base: vector<string>
+{static} +merge(Diff, Diff): pair<Diff, vector<pair<Hunk, Hunk>>>
++apply(): vector<string>
+}
+Diff "0..*" *-- Hunk
+Hunk "0..*" *-- Change
+Change *-- Change::Type
+class Hash {
+-bytes: char[20]
+}
+enum TreeChange::Type {
+Add
+Delete
+Modify
+}
+struct TreeChange {
+}
+struct TreeDiff::Conflicts {
++deleteConflicts: set<path>
+}
+class TreeDiff {
+{static} +merge(TreeDiff, TreeDiff): pair<TreeDiff, TreeDiff::Conflicts>
++empty(): bool
++begin(): Iterator
++end(): Iterator
+}
+TreeDiff "0..*" *-- TreeChange
+TreeDiff::Conflicts "0..*" *-- Diff
+TreeChange "2" o-- Blob
+TreeChange *-- TreeChange::Type
+class Repository {
+{static} +defaultBranch: string
++addToIndex(vector<path>)
++removeFromIndex(vector<path>, bool)
++commitIndex(string, set<Hash>)
++moveHeadSticky(Hash)
++checkout(string)
++merge(Hash): optional<vector<path>>
++cherrypick(Hash): optional<vector<path>>
+}
+RepositoryStore <|-- Repository
+RepositoryStore "0..*" *-up- Object
+RepositoryStore "0..*" *-up- Branch
+RepositoryStore "0..1" *-up- Head
+RepositoryStore "0..1" *-up- Index
+abstract class Command {
+#repoPath: path
+#args: vector<string>
+{abstract} #printHelpMessage()
+#createRules()
+#process()
++execute()
+}
+Command *-up- Repository
+class commands::Add {
+-printHelpMessage()
+-process()
+}
+Command <|-right- commands::Add
+class commands::Branch {
+-printHelpMessage()
+-process()
+}
+Command <|-right- commands::Branch
+class commands::Checkout {
+-printHelpMessage()
+-createRules()
+-process()
+}
+Command <|-right- commands::Checkout
+class commands::Cherrypick {
+-printHelpMessage()
+-process()
+}
+Command <|-right- commands::Cherrypick
+class commands::Commit {
+{static} +editMessagePath: string
+-printHelpMessage()
+-createRules()
+-process()
+}
+Command <|-down- commands::Commit
+class commands::Diff {
+-printHelpMessage()
+-createRules()
+-process()
+}
+Command <|-right- commands::Diff
+class commands::Init {
+-printHelpMessage()
+-process()
+}
+Command <|-right- commands::Init
+class commands::Log {
+-printHelpMessage()
+-createRules()
+-process()
+}
+Command <|-left- commands::Log
+class commands::Merge {
+{static} +mergeInfoPath: string
+-printHelpMessage()
+-createRules()
+-process()
+}
+Command <|-left- commands::Merge
+class commands::Print {
+-printHelpMessage()
+-process()
+}
+Command <|-left- commands::Print
+class commands::Rebase {
+{static} +rebaseInfoPath: string
+-printHelpMessage()
+-createRules()
+-process()
+}
+Command <|-down- commands::Rebase
+class commands::Reset {
+-printHelpMessage()
+-createRules()
+-process()
+}
+Command <|-down- commands::Reset
+class commands::Rm {
+-printHelpMessage()
+-createRules()
+-process()
+}
+Command <|-down- commands::Rm
+class commands::Status {
+-printHelpMessage()
+-process()
+}
+Command <|-down- commands::Status
+@enduml
