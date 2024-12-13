@@ -17,4 +17,4 @@ debug:
 	$(MAKE) FLAGS=-DMYVCDEBUG myvc
 
 clean:
-	rm -rf *.o commands/*.o commands/*.d *.d myvc myvc-convert
+	rm -rf *.o commands/*.o commands/*.d *.d myvc
