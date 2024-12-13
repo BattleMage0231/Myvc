@@ -47,3 +47,7 @@ void Blob::read(std::istream &in) {
 const std::vector<char> &Blob::getData() const {
     return data;
 }
+
+bool Blob::operator==(const Blob &other) const {
+    return data == other.data;
+}

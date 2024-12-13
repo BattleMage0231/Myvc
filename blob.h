@@ -23,6 +23,8 @@ public:
     void read(std::istream &) override;
 
     const std::vector<char> &getData() const;
+
+    bool operator==(const Blob &) const;
 };
 
 }

@@ -55,6 +55,9 @@ Hash create_commit(git_repository *repo, git_commit *commit, Repository &myvcRep
     git_oid oid;
     git_oid_cpy(&oid, git_commit_id(commit));
     if(cached.find(oid) != cached.end()) return cached.at(oid);
+    char str[GIT_OID_HEXSZ + 1];
+    git_oid_tostr(str, sizeof(str), &oid);
+    std::cout << "Converting commit " << str << std::endl;
     std::string msg = git_commit_message_raw(commit);
     time_t time = static_cast<time_t>(git_commit_time(commit));
     git_tree *tree;

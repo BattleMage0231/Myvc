@@ -55,12 +55,14 @@ static void printDiff(const myvc::Diff &diff) {
 }
 
 static bool isBinary(const Blob &b) {
-    if(b.getData().empty()) return false;
+    size_t dataSz = b.getData().size();
+    if(dataSz == 0) return false;
     size_t np = 0;
     for(char byte : b.getData()) {
         if(!std::isprint(byte) && byte != '\n' && byte != '\t') ++np;
+        if(np > 0.3 * dataSz) return true;
     }
-    return static_cast<double>(np) / b.getData().size() > 0.3;
+    return false;
 }
 
 static void printTreeDiff(const TreeDiff &diff) {

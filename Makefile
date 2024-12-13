@@ -1,4 +1,4 @@
-CXX = /usr/local/gcc-14.1.0/bin/g++-14.1.0 -std=c++20 -Wall -g
+CXX = g++-14.2.0 -std=c++20 -Wall -O3
 FLAGS =
 DEP = serialize.o blob.o branch.o commit.o head.o index.o store.o tree.o diff.o hash.o treediff.o treebuilder.o repository.o 
 
